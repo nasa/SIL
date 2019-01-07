@@ -18,7 +18,7 @@ Secondly, code is generated for the model and then validated. Generally validati
 
 ## Status
 
-This test suite is a work in progress and not all SIL functionality is currently tested. Please review [doc/testPlan.xlsx](../doc/testPlan.xlsx) for information on current test coverage.
+This test suite is a work in progress and not all SIL functionality is currently tested. Please review the [test plan](../doc/TestPlan.xlsx) for information on current test coverage.
 
 These tests are currently run by hand on 2018b on Windows and Linux. The SIL is intended to be compatible with 2017b+ on all platforms.
 
