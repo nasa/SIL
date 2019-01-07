@@ -1,0 +1,124 @@
+%%  SYSTLC: NASA CFS Target File \
+%%     TMF: ert_default_tmf MAKE: make_rtw EXTMODE: no_ext_mode
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Abstract:
+%%   NASA Core Flight Software (CFS) Code Generation Target System File
+%%
+%%   Note: see user documentation for "Customizing System Target Files"
+%%         for detailed instructions on how to modify this file.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%---------------------------- 
+%% TLC Configuration Variables Section
+%%---------------------------- 
+%% Assign code format, language, target type. 
+%% 
+%assign CodeFormat = "Embedded-C"
+%assign TargetType = "RT"
+%assign Language   = "C"
+
+%%
+%%---------------------------- 
+%% TLC Program Entry Point 
+%%---------------------------- 
+%% Call default entry point function. 
+%include "codegenentry.tlc"
+
+%% The contents between 'BEGIN_RTW_OPTIONS' and 'END_RTW_OPTIONS' are strictly
+%% written by the standard format. We need to use this structure in RTW
+%% options GUI function rtwoptionsdlg.m file.
+%%
+/%
+  BEGIN_RTW_OPTIONS
+  
+  idx = 1;
+  rtwoptions(idx).prompt        = 'CFS Target Settings';
+  rtwoptions(idx).type          = 'Category';
+  rtwoptions(idx).enable        = 'on';  
+  rtwoptions(idx).default       = 1;   % number of items under this category
+                                         % excluding this one.
+  rtwoptions(idx).popupstrings  = '';
+  rtwoptions(idx).tlcvariable   = '';
+  rtwoptions(idx).tooltip       = '';
+  rtwoptions(idx).callback      = '';
+  rtwoptions(idx).makevariable  = '';
+
+  idx = idx + 1;
+  rtwoptions(idx).prompt         = 'Generate State table:';
+  rtwoptions(idx).type           = 'Checkbox';
+  rtwoptions(idx).default        = 'off';
+  rtwoptions(idx).tlcvariable    = '__CFS_GEN_STATE_TABLE__';
+  rtwoptions(idx).tooltip        = ...
+    ['If checkbox is selected, an entry for the model' ...
+    'state data is created.'];
+
+  idx = idx + 1;
+  rtwoptions(idx).prompt         = 'Build Version Identifier:';
+  rtwoptions(idx).type           = 'Edit';
+  rtwoptions(idx).default        = 'test';
+  rtwoptions(idx).tlcvariable    = '__CFS_BUILD_VERSION_IDENTIFIER__';
+  rtwoptions(idx).tooltip        = ...
+    ['Build identifier to be included with the code.'];
+
+  rtwgensettings.BuildDirSuffix = '_cfs_ert_rtw';
+  rtwgensettings.Version        = '1';
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NOTE: User callbacks written for releases prior to MATLAB release 14      %
+  %       may not work with the current Configuration Parameters GUI. See the %
+  %       Developing Embedded Targets documentation for conversion            %
+  %       information.                                                        %
+  %       Set rtwgensettings.Version to '1' if:                               %
+  %       * DialogFig is  not referenced in any callbacks,                    %
+  %       OR                                                                  %
+  %       *  DialogFig references have been been converted to use the r14     %
+  %       callback API                                                        %
+  %                                                                           %
+  %       Setting rtwgensettings.Version to '1' declares r14 callback         %
+  %       compatibility so the currentConfiguration Parameters GUI will       %
+  %       trigger the callbacks.                                              %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  rtwgensettings.SelectCallback = 'cfs_selectcallback(hDlg, hSrc)';
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NOTE: SelectCallback should be used to set up the host configuration set  %
+  %       for this target.  This callback is triggered when this target is    %
+  %       selected in the system target browser dialog.                       %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  %%rtwgensettings.ActivateCallback = ...
+  %%  'ActivateCall(model)';
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NOTE: Variable "model" is a reserved keywords.  It is the handle of the   %
+  %       host model.                                                         %
+  %       Use ActivateCallback to set up options outside of the host          %
+  %       configuration set of this target, e.g. other model settings,        %
+  %       toolchain selection, etc.  This callback is triggered when the host %
+  %       configuration set of this target becomes the active configuration   %
+  %       set of its host model, e.g. when a model is loaded, when the active %
+  %       configuration set of a model is changed in the model explorer, when %
+  %       changes in the configuration parameters dialog are applied and      %
+  %       there is a change in target selection, etc.                         %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  %%rtwgensettings.PostApplyCallback = ...
+  %%  'PostApplyCall(hDlg, hSrc, model)';
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NOTE: PostApplyCallback should be used to setup options outside of the    %
+  %       configuration set of this target based on changes in the host       %
+  %       configuration set options.  At the time when this callback is       %
+  %       triggered, UI changes are already applied to the host configuration %
+  %       set and thus up-to-date.                                            %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  rtwgensettings.DerivedFrom = 'ert.tlc';
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % NOTE: DerivedFrom declares the base target of this target. All the UI     %
+  %       options and default settings are inherited.                         %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+  END_RTW_OPTIONS
+ %/
+

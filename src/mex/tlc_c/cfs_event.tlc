@@ -1,0 +1,87 @@
+%% file : cfs_event.tlc
+%% 
+%% Description:
+%%   Simulink Coder TLC Code Generation file for cfs_event block.
+%% 
+
+%implements cfs_event "C"
+
+%% Function: BlockTypeSetup ===============================================
+%%           Called once for all block instances
+%function BlockTypeSetup (block, system) void
+    %createrecord ::__cfsEventTable__ {}  
+    %% The Target Language must be C
+    %% This is locked by cfs_selectcallback.m
+%endfunction
+
+%% Function: BlockInstanceSetup ===========================================
+%%           Called for each block instance
+%function BlockInstanceSetup (block, system) void
+    %<LibBlockSetCustomStorageComplianceLevel(block, 2)>
+    %<LibBlockSetIsExpressionCompliant(block)>
+    %if SLibIsHostBasedSimulationTarget()
+        %return
+    %endif
+    %if LibIsModelReferenceSimTarget() || ...
+        LibIsModelReferenceTarget() || ...
+        LibIsModelReferenceRTWTarget()
+      %assign warnmsg = "Block is being "...
+                       +"used in a Model Reference. This will not result "...
+                       +"in code being generated for CFS Event Tables"
+      %<LibBlockReportWarning(block,warnmsg)>
+    %endif
+    %assign blkpath   = LibGetFormattedBlockPath(block)
+    %assign flag      = LibBlockDWorkAddr(eventFlag, "", "", 0)
+    %assign id        = LibBlockParameterBaseAddr(event_id)
+    %assign type      = LibBlockParameterBaseAddr(event_type)
+    %assign mask      = LibBlockParameterBaseAddr(event_mask)
+    %assign numdata   = LibBlockParameterValue(event_numdata, 0)
+    %assign fmtstring = LibBlockParameterBaseAddr(event_fmtstring)
+    %assign blkidnum  = CAST("Number",numdata)
+    %assign blkid     = "EVENT_message%<blkidnum>_ID"
+
+    %% Store sub-record of addresses of data inputs 
+    %createrecord tDataAddresses {}
+    %foreach idx = numdata
+        %assign val = LibBlockDWorkAddr(eventData, "", "", idx)
+        %addtorecord tDataAddresses Data {Addr val}
+    %endforeach
+
+    %% Create Event record for this block
+    %addtorecord __cfsEventTable__ Event { eventBlockID blkid; ...
+                                    eventID id; ...
+                                    eventType type; ...
+                                    eventMask mask; ...
+                                    DataAddresses %<tDataAddresses>; ...
+                                    Flag flag; ...
+                                    Message fmtstring; ...
+                                    Path blkpath}
+
+%endfunction
+
+%% Function: InitializeConditions =========================================
+%function InitializeConditions (block, system) Output
+    %assign flag      = LibBlockInputSignal(0, "", "", 0)
+    %assign flagDW    = LibBlockDWork(eventFlag, "", "", 0)
+    %assign dataInDW  = LibBlockDWorkAddr(eventData, "", "", 0)
+    %assign numdata   = LibBlockParameterValue(event_numdata, 0) 
+    %<flagDW> = false;
+    (void) memset(%<dataInDW>, 0, %<numdata>U*sizeof(real_T));
+%endfunction
+
+
+%% Function: Outputs ======================================================
+%function Outputs (block, system) Output
+    %assign flag      = LibBlockInputSignal(0, "", "", 0)
+    %assign flagDW    = LibBlockDWork(eventFlag, "", "", 0)
+    %assign numdata   = LibBlockParameterValue(event_numdata, 0) 
+    %% Copy the Event flag input to persistent data
+    %<flagDW> = %<flag>;
+    %% Copy Event data inputs to persistent data  - they must be scalar.
+    %foreach idx = numdata-1
+        %<LibBlockDWork(eventData, "", "", idx)> = \
+          %<LibBlockInputSignal(idx+1, "", "", 0)>;
+    %endforeach
+%endfunction
+
+%% [EOF]

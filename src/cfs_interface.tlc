@@ -1,0 +1,163 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Abstract:
+%%   This template TLC file creates the eci_interface.h header file for 
+%%   a given model.  This header is the CFS Simulink Interface Layer (SIL) 
+%%   interface for the generated model code. 
+%%
+%%   This template must be used with cfs_ert.tlc System Target only.  
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Don't use this template if generating code for a model reference.
+%if !LibIsModelReferenceTarget() && ... 
+    !LibIsModelReferenceRTWTarget() && ...
+    !LibIsModelReferenceSimTarget()
+
+  %% Add the directory where this TLC file exists to the TLC path so
+  %% we can access the cfs_interface_utils.tlc routines. 
+  %assign tpath = FEVAL("evalin", "base", "fileparts(which('cfs_interface.tlc'))")
+  %addincludepath "%<tpath>" 
+  %include "cfs_interface_utils.tlc"
+
+  %% Checking this will ensure cfs_ert.tlc target is being used.
+  %if !EXISTS(__CFS_GEN_STATE_TABLE__)
+    %assign errmsg = "The cfs_interface.tlc template must be used with" ...
+                    +" cfs_target.tlc System Target file."
+    %<LibReportError(errmsg)>
+  %endif
+
+  %assign modelHdr         = LibGetModelDotHFile()
+  %assign ::interfaceHFile = LibCreateSourceFile("Header","Custom","eci_interface")
+  %assign model_name_lower = FEVAL("lower",CompiledModel.Name)
+  %assign model_name_upper = FEVAL("upper",CompiledModel.Name)
+    
+  %%
+  %% Model and sub-system names follow a naming convention in which the 
+  %% suffix _A, _B or _C indicates the fidelity of the model.  For 
+  %% example, there could be three versions of the "gnc" model 
+  %% named: gnc_a, gnc_b and gnc_c. Some C code in this file is independent
+  %% of the fidelity suffix.  As a result, create a TLC symbol
+  %% that has this suffix removed.
+  %%
+  %assign model_name                 = LibGetModelName()   
+  %assign model_name_short_tmp       = FEVAL("regexp", model_name_upper, "^.{1,20}", "match")
+  %assign model_name_short           = FEVAL("regexprep", model_name_short_tmp, "[\[\]]", "")
+  %assign model_name_len             = SIZE(model_name,1)+1
+
+  %% comment header starts here: 
+  %openfile tmpFcnBuf
+  %selectfile tmpFcnBuf
+  /*
+   * Auto generated eci_interface.h for model: %<LibGetModelName()>
+   *
+   *
+   * Description:
+   *
+   * For more information:
+   *   o Simulink Coder User's Guide
+   *   o Embedded Coder User's Guide
+   *   o CFS Target User's Guide
+   *
+   */
+  %closefile tmpFcnBuf
+  %<LibSetSourceFileSection(::interfaceHFile, "Definitions", tmpFcnBuf)>
+
+  %% include files go here:  
+  %openfile tmpFcnBuf
+  #include "%<LibGetMdlPubHdrBaseName()>.h" /* Model's header file */
+  #include "%<LibGetMdlPrvHdrBaseName()>.h"
+  
+  /* Code Revision Identifier */
+  #define ECI_APP_REVISION_NUMBER "%<__CFS_BUILD_VERSION_IDENTIFIER__>"
+  %closefile tmpFcnBuf
+  %<LibSetSourceFileSection(::interfaceHFile, "Includes", tmpFcnBuf)>
+
+  %% includes for model.h go here:   
+  %% csl_app.h is in model.h because of possible gnc time struct use
+  %openfile tmpFcnBuf
+  #include "eci_app.h"                /* CSL Header file */
+  %closefile tmpFcnBuf
+  %<LibSetSourceFileSection(modelHdr, "Includes", tmpFcnBuf)>
+
+  %% Declare CFS interface variables in this section:    
+  %openfile tmpFcnBuf
+
+  %assign parmCount     = cfs_get_parameter_count()
+  %assign needMdlParam  = (parmCount>0)
+ 
+  %assign needMdlDWork = cfs_has_dwork()
+  %if needMdlDWork
+    %assign dworkStruct = LibGetDWorkStruct()
+  %endif
+
+  %% Insert definitions for model data such as the RT_MODEL struct, DWork,
+  %% etc.  This will return empty if the model is configured for a 
+  %% non-reusable interface
+  %<cfs_write_model_data()>
+
+  %if needMdlParam
+    #define ECI_PARAM_TBL_DEFINED 1
+    %<cfs_parm_table()>
+  %endif
+
+  %if needMdlDWork && __CFS_GEN_STATE_TABLE__
+      #define ECI_STATE_TBL_DEFINED   1
+      #define ECI_STATE_TABLE_NAME "%<model_name_short>.STATE"
+      ECI_TBL_FILEDEF(ECI_TBL_FileDef_State, %<dworkStruct>, %<model_name_short>.STATE, %<model_name_upper> STATES, %<model_name>_state.tbl)
+      #define ECI_STATE_TBL %<dworkStruct>   
+  %endif
+
+#define MODEL_NAME_LEN  (%<model_name_len>)
+#if MODEL_NAME_LEN > OS_MAX_API_NAME
+#error Model name %<model_name> must be less than OS_MAX_API_NAME characters
+#endif
+
+#define ECI_FLAG_MID            %<model_name_upper>_FDC_MID
+#define ECI_CMD_MID             %<model_name_upper>_CMD_MID
+#define ECI_PERF_ID             %<model_name_upper>_PERF_ID
+#define ECI_TICK_MID            %<model_name_upper>_TICK_MID
+#define ECI_HK_MID              %<model_name_upper>_HK_MID
+#define ECI_APP_MAIN            %<model_name_lower>_AppMain
+#define ECI_APP_NAME_UPPER      "%<model_name_upper>"
+#define ECI_APP_NAME_LOWER      "%<model_name_lower>"
+
+#define ECI_CMD_PIPE_NAME  "%<model_name_upper>_CMD_PIPE"
+#define ECI_DATA_PIPE_NAME "%<model_name_upper>_DATA_PIPE"
+
+%% Insert CSL Message Send code chunk
+%<cfs_message_send()>
+
+%% Insert CSL Message Receive code chunk
+%<cfs_message_receive()>
+
+%% Insert CSL Events code chunk
+%<cfs_events()>
+
+%% Insert CSL FDC code chunk
+%<cfs_fdc_messages()>
+
+%% Insert CSL GNC code chunk
+%<cfs_gnc_time()>
+
+/* model initialization function */
+%%<cfs_pack_model_data()>
+%assign init_code = cfs_FcnPackModelDataIntoRTM()
+%<init_code>
+
+/* step function.  Single rate (non-reusable interface) */
+#define ECI_STEP_FCN \\
+%<LibCallModelStep(0)>
+
+#define ECI_TERM_FCN %<LibCallModelTerminate()>
+  %closefile tmpFcnBuf
+  %<LibSetSourceFileSection(::interfaceHFile, "Definitions", tmpFcnBuf)>
+%% end of CFS (SIL interface) variables section
+
+%else
+  %assign errTxt = "File customization template: cfs_interface.tlc must only " ... 
+                   "be used in top level build. Ignoring this setting."
+  %warning %<errTxt>
+%endif
+
+

@@ -1,0 +1,117 @@
+%% file : cfs_conditional_msg.tlc
+%% 
+%% Description:
+%%   Simulink Coder TLC Code Generation file for cfs_conditional_msg block
+%% 
+
+%implements cfs_conditional_msg "C"
+
+%% Function: BlockTypeSetup ===============================================
+%%           Called once for all block instances
+%function BlockTypeSetup (block, system) void
+    %createrecord ::__cfsConditionalMsgTable__ {}  
+    %% The Target Language must be C
+    %% This is locked by cfs_selectcallback.m
+%endfunction
+
+%% Function: BlockInstanceSetup ===========================================
+%%           Called for each block instance
+%function BlockInstanceSetup (block, system) void
+    %<LibBlockSetCustomStorageComplianceLevel(block, 2)>
+    %<LibBlockSetIsExpressionCompliant(block)>
+    %if SLibIsHostBasedSimulationTarget()
+        %return
+    %endif
+    %if LibIsModelReferenceSimTarget() || ...
+        LibIsModelReferenceTarget() || ...
+        LibIsModelReferenceRTWTarget()
+      %assign warnmsg = "\"%<LibGetBlockPath(block)>\" is being "...
+                       +"used in a Model Reference. "
+      %<LibBlockReportWarning(block,warnmsg)>
+    %endif
+    %assign blkpath   = LibGetBlockPath(block)
+    %assign sendflag  = LibBlockDWorkAddr(cmsgFlag, "", "", 0)
+    %assign msgname   = LibBlockInputSignal(1, "", "", 0)
+    %% process the input name to get just name since input signal
+    %% may be a struct or have address-of, dereference chars etc.
+    %assign msgname   = FEVAL("regexprep", msgname, "\\.", "_")
+    %assign msgname   = FEVAL("regexprep", msgname, "\\W", "")
+    %assign msgname   = FEVAL("regexp",    msgname, "\\w*$", "match")
+    
+    %% capture the output bus address.  this will be compared
+    %% to the address for the CSC attached to this signal
+    %% (if it exists).
+    %%assign id         = LibBlockInputSignalAddr(1, "", "", 0)
+    %assign id          = LibBlockOutputSignalAddr(0, "", "", 0)
+    %assign bustype     = LibBlockInputSignalDataTypeName(1,"")
+    %assign sc_type     = LibBlockOutputSignalStorageClass(0)
+
+    %if (sc_type == "Custom" )      
+      %% Next two lines required to get access to the signal 
+      %% record from this block's outport so we can get the
+      %% name of the custom storage class (third line).
+      %assign ip        = FcnGetOutputPortRecord(0)
+      %assign sigRec    = SLibGetSourceRecord(ip, 0)
+      %assign sc_name   = LibGetCustomStorageClassName(sigRec)
+
+      %% Checks to make sure block is either at root level or
+      %% at least driving root outport
+      %if !LibCustomStorageRecordIsExternalOutput(sigRec)
+        %if (ISFIELD(sigRec, "DrivesRootOutput") && ... 
+            sigRec.DrivesRootOutput != "yes" )
+
+          %assign attop_errmsg = "\"%<LibGetBlockPath(block)>\" "...
+                   + "must be at top level of model or within virtual "...
+                   + "subsystems and connected to an external output port."
+
+          %<LibReportError(attop_errmsg)>
+        %endif
+      %endif
+      %% Check to ensure output signals is one of the accepted 
+      %% storage classes.
+      %if !( (sc_name == "cfsTlmMessage") || (sc_name == "cfsCmdMessage") ) 
+
+        %assign csc_errmsg  = "Output port of \"%<LibGetBlockPath(block)>\" "...
+                   + "must have storage class \"cfsTlmMessage\" or "...
+                   + "\"cfsCmdMessage\". It has storage class \"%<sc_name>\"."
+
+        %<LibReportError(csc_errmsg)>
+      %endif
+    %else
+      %assign csc_errmsg  = "Output port of \"%<LibGetBlockPath(block)>\" "...
+                 + "must have custom storage class \"cfsTlmMessage\" or "...
+                 + "\"cfsCmdMessage\". It has storage class type \"%<sc_type>\"."
+
+      %<LibReportError(csc_errmsg)>
+    %endif
+    %% Create Conditional Send Message record for this block
+    %addtorecord __cfsConditionalMsgTable__ Cmsg {SignalID id; ...
+                                            MsgName msgname; ...
+                                            Flag sendflag; ...
+                                            BusType bustype; ...
+                                            Path blkpath}
+    
+
+%endfunction
+
+%% Function: InitializeConditions =========================================
+%function InitializeConditions (block, system) Output
+    %assign flagDW    = LibBlockDWork(cmsgFlag, "", "", 0)
+    %<flagDW> = false;
+%endfunction
+
+%% Function: Outputs ======================================================
+%function Outputs (block, system) Output
+    %assign flag      = LibBlockInputSignal(0, "", "", 0)
+    %assign flagDW    = LibBlockDWork(cmsgFlag, "", "", 0)
+    %assign busin     = LibBlockInputSignal(1, "", "", 0)
+    %assign busout    = LibBlockOutputSignal(0, "", "", 0)
+
+    %% Copy the Conditional msg flag input to persistent data
+    %<flagDW> = %<flag>; 
+    if (%<flagDW>) {
+        %<busout> = %<busin>;
+    } 
+%endfunction
+
+%% [EOF]

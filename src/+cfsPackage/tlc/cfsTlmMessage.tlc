@@ -1,0 +1,529 @@
+%% File Abstract ================================================================
+%%
+%% This is the TLC implementation of cfsTlmMessage Custom Storage Class.  It
+%% is dervied from the published template found in TEMPLATE_v2.tlc stored
+%% at <matlabroot>/toolbox/rtw/targets/ecoder/csc_templates
+%% 
+%% This template conforms to the syntax of custom storage class version 2. 
+%% This template implements externally visible global variables.
+%%
+%% See TEMPLATE_v2.tlc comments for a complete description of the supported
+%% API available (see Disclaimer below)
+%%
+%% Note: This template is only modified in places marked "CFS Start" and
+%%       "CFS End" to implement this CFS Custom Storage Class.
+%%
+
+%% Disclaimer ===================================================================
+%%
+%% Custom storage classes are an advanced feature of Embedded Coder, and provide
+%% tremendous customization capability of data symbols in the generated code.
+%% This file contains a brief description of the recommended TLC function API
+%% to implement a custom storage class.  Programming to this API isolates you
+%% from future changes to Embedded Coder. Functionality programmed outside of
+%% the recommended API is at risk of not working in a future release.
+
+%% Target language is C
+%implements * "C"
+
+%% Function: DataAccess =========================================================
+%% Abstract:
+%%   DataAccess provides an API for requesting code fragments or other
+%%   information corresponding to data of a custom storage class.
+%%
+%% Function arguments:
+%%   record
+%%     The record corresponding to the specific data instance of a class.
+%%
+%%   request
+%%     The nature of the code or information requested.  DataAccess must honor
+%%     the following requests: "address", "contents", "declare", "define",
+%%     "initialize", "layout" and "qualifier".
+%%
+%%   idx
+%%     The desired index.  This is "" for scalars and "[some_index]" otherwise.
+%%     Note that idx is [] for non-indexing requests "declare" and "define".
+%%
+%%   reim
+%%     A string corresponding to the selection of the real or imaginary
+%%     component of complex data.  For non-complex data, reim is "".  For
+%%     complex data, reim is ".%<tRealPart>" (.re by default) for the real
+%%     component, ".%<tImagPart>" (.im by default) for the imaginary component,
+%%     and "" for the base of both components.  Together with idx, reim is
+%%     used to select a scalar element of a complex, nonscalar array.
+%%
+%%   newValue
+%%     auxiliary information used by some data access methods, e.g. "set"
+%%
+
+%function DataAccess(record, request, idx, reim, newValue) void
+
+  %switch request
+
+    %% ==========================================================================
+    %% The "declComment" request is used to return the comments to be generated
+    %% along with the data declaration (see "declare" request below).
+    %%
+    %% Note that this request returns a vector of three strings.  The three
+    %% strings will be placed as follows:
+    %%
+    %%    (1) ABOVE
+    %%    %<declaration>    (2) ON THE SAME LINE
+    %%    (3) BELOW
+    %%
+    %% Each string must be a valid C comment, or empty.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %assign comment = "/* Declaration of data: %<id> */"
+    %%   %return ["%<comment>", "", ""]
+    %case "declComment"
+
+      %% LibDefaultCustomStorageDataDeclComment is the default function to get
+      %% comments for declaration of a data.
+      %return LibDefaultCustomStorageDataDeclComment(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "declare" request is used to declare data to have external linkage
+    %% in the generated header files.  If the data does not need external
+    %% linkage (i.e. if you do not want a declaration to appear), return "".
+    %%
+    %% Note that if this request returns a statement, that statement must
+    %% include the terminating semicolon.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %assign dt = LibGetRecordCompositeDataTypeName(record)
+    %%   %return "%<dt> %<id>%<idx>;"
+    %%
+    %case "declare"
+      
+      %% LibDefaultCustomStorageDeclare is the default declare function to
+      %% declares a global variable whose identifier is the name of the data.
+      %return "extern %<LibDefaultCustomStorageDeclare(record)>"
+      %%break
+
+    %% ==========================================================================
+    %% The "defnComment" request is used to return the comments to be generated
+    %% along with the data definition (see "define" request below).
+    %%
+    %% Note that this request returns a vector of three strings.  The three
+    %% strings will be placed as follows:
+    %%
+    %%    (1) ABOVE
+    %%    %<definition>    (2) ON THE SAME LINE
+    %%    (3) BELOW
+    %%
+    %% Each string must be a valid C comment, or empty.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %assign comment = "/* Definition of data: %<id> */"
+    %%   %return ["%<comment>", "", ""]
+    %case "defnComment"
+
+      %% LibDefaultCustomStorageDataDefnComment is the default function to get
+      %% comments for definition of a data.
+      %return LibDefaultCustomStorageDataDefnComment(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "define" request is used to define (allocate) data.  Code fragments
+    %% generated by this request are inserted into the generated header files.
+    %% Parameters should statically set their initial value set to a nominal
+    %% value.
+    %%
+    %% If this request returns a statement, that statement must include
+    %% the terminating semicolon.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %assign dt = LibGetRecordCompositeDataTypeName(record)
+    %%   %if LibCustomStorageRecordIsModelParameter(record)
+    %%     %assign initStr = LibParameterInstanceInitStr(record)
+    %%     %return "%<dt> %<id>%<idx> = %<STRING(initStr)>;"
+    %%   %else
+    %%     %return "%<dt> %<id>%<idx>;"
+    %%   %endif
+    %%
+    %case "define"
+      %% CFS Start
+      %assign busname = LibGetRecordCompositeDataTypeName(record)
+      %% TODO: check if this is a bus ?
+      %assign addr         = LibDefaultCustomStorageAddress(record, idx, reim)
+      %assign msgname      = LibGetRecordIdentifier(record)
+
+      %% Determine whether this is a sent or received CFS Message
+      %if LibCustomStorageRecordIsExternalInput(record)
+           %assign type = "receive"
+      %elseif LibCustomStorageRecordIsExternalOutput(record) || ...
+              (ISFIELD(record,"IsAtRootInputOrOutput") && record.IsAtRootInputOrOutput == TLC_TRUE) 
+              %% (ISFIELD(record,"DrivesRootOutport") && record.DrivesRootOutport == "yes") || ...
+           %assign type = "send"
+      %else
+        %assign errmsg = "The custom Storage class \"%<LibGetCustomStorageClassName(record)>\" "...
+                        +"is used to define CFS Message structures.  This "... 
+                        +"storage class for \"%<LibGetRecordIdentifier(record)>\"  "...
+                        +"must be used for an external input or to drive "...
+                        +"an external output."
+        %<LibReportError(errmsg)>
+      %endif
+
+      %% LibDefaultCustomStorageDefine is the default define function to define
+      %% a global variable whose identifier is the name of the data.  If the
+      %% data is a parameter, the definition is also statically initialized to
+      %% its nominal value (as set in MATLAB).
+      %%
+      %% tbuf will contain the code definition chunk for a signal object
+      %% that is a CFS Message (by applying the cfsTlmMessage storage class).
+      %openfile tbuf
+      %<LibDefaultCustomStorageDefine(record)>     
+      %closefile tbuf
+
+       %addtorecord __cfsTlmMessageTable__ Message {Address      addr; ...
+                                            Name         msgname; ...
+                                            BusName      busname; ...
+                                            Type         type ...
+                                            }
+      %return tbuf
+      %% CFS End
+      %%break
+
+    %% ==========================================================================
+    %% The "contents" request is used to generate code corresponding to the
+    %% usage of data on the left-hand or right-hand side of an assignment.  The
+    %% argument idx is set to an array indexer if the data is nonscalar, and ""
+    %% otherwise.  The argument reim is set to "%.<tRealPart>" (.re by default)
+    %% or "%.<tImagPart>" (.im by default) if the data is complex.  If you are
+    %% using the same data structure as The Mathworks, Inc. to represent complex
+    %% data (in struct fields ".re" and ".im") you can use the flag reim
+    %% as-is for the complex subindex.
+    %%
+    %% This request must return a reference to data as an expression, not a
+    %% statement, so it should not include a terminating semicolon.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %return "%<id>%<idx>%<reim>"
+    %%
+    %case "contents"
+
+      %% LibDefaultCustomStorageContents is the default contents function to
+      %% return a scalar element of a global variable whose identifier is the
+      %% name of the data.
+      %return LibDefaultCustomStorageContents(record, idx, reim)
+      %%break
+
+    %% ==========================================================================
+    %% The "set" request is used to generate code to assign the value of data.
+    %% The argument idx is set to an array indexer if the data is nonscalar,
+    %% and "" otherwise.  The argument reim is set to "%.<tRealPart>" (.re by
+    %% default) or "%.<tImagPart>" (.im by default) if the data is complex.  If
+    %% you are using the same data structure as The Mathworks, Inc. to represent
+    %% complex data (in struct fields ".re" and ".im") you can use the flag reim
+    %% as-is for the complex subindex.  The argument "newValue" is the value to
+    %% assign to the data.
+    %%
+    %% This request should return a statement with a terminating semicolon.
+    %%
+    %% This request is optional; if it is not defined, the code generated
+    %% will simply set the string returned via the "contents" method to the
+    %% string passed by the "newValue" argument.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %return "set_%<id>(%<newValue>);\n"
+    %%
+    %case "set"
+
+      %% LibDefaultCustomStorageSet is the default contents set function to
+      %% set a scalar element of a global variable whose identifier is the
+      %% name of the data.
+      %return LibDefaultCustomStorageSet(record, idx, reim, newValue)
+      %%break
+
+    %% ==========================================================================
+    %% The usage of the "address" request is identical to the "contents" request,
+    %% except the function is to return the address of the data instead of
+    %% its contents.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %return "&%<id>%<idx>%<reim>"
+    %%
+    %case "address"
+
+      %% LibDefaultCustomStorageAddress is the default address function to
+      %% return the address of a scalar element of a global variable whose
+      %% identifier is the name of the data.
+      %return LibDefaultCustomStorageAddress(record, idx, reim)
+      %%break
+
+    %% ==========================================================================
+    %% The "initialize" request is executed when generating code for the model
+    %% registration function, and is a hook to initialize internal and external
+    %% data to zero.  Internal data refers to block outputs (signals) and block
+    %% states.  External data refers to root-level inports and outports.  Note
+    %% that this request is not executed when the option "Initialize internal
+    %% data" or "Initialize external I/O data" is not selected for internal and
+    %% external data, respectively.
+    %%
+    %% If this request returns a statement, that statement must include
+    %% the terminating semicolon.
+    %%
+    %% Sample code:
+    %%
+    %%   %assign id = LibGetRecordIdentifier(record)
+    %%   %assign gndValue = LibGetGroundValue(record, tRealPart)
+    %%   %return "%<id>%<idx>%<reim> = %<gndValue>;"
+    %%
+    %case "initialize"
+
+      %% LibDefaultCustomStorageInitialize is the default initialization
+      %% function that initializes a scalar element of a global variable to 0. 
+      %return LibDefaultCustomStorageInitialize(record, idx, reim)
+      %%break
+
+    %% ==========================================================================
+    %% The "layout" request is used to define the method in which data is mapped
+    %% to memory.  Return a vector with one of the following formats:
+    %%
+    %% ["data-class", NumDimensions, [dim1, dim2, ..., dimM], "zero_index"]
+    %% ["other"]
+    %%
+    %% For example, a 4D, 2D, vector, and scalar data, respectively
+    %%
+    %%   3x3x2x5 matrix: ["col-mat-nd", 4, [3, 3, 2, 5], "[0]"]
+    %%       3x4 matrix: ["col-mat",    2, [3, 4],       "[0]"]
+    %%     3(x1) vector: ["vector",     2, [3, 1],       "[0]"]
+    %%     (1x1) scalar: ["scalar",     2, [1, 1],       ""   ]
+    %%
+    %% The information returned by this request is used, among other
+    %% things, for generating interfaces to data.  For example, the Real-Time
+    %% Workshop's C-API for signals and parameters utilizes this information.
+    %%
+    %case "layout"
+
+      %% LibDefaultCustomStorageLayout is the default layout function, and may
+      %% be used when the data is laid out in memory like built-in Simulink
+      %% data.  If the data is not laid out in memory like Simulink data,
+      %% return the vector ["other"].
+      %return LibDefaultCustomStorageLayout(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "qualifier" request is used to specify the type qualifier(s) that are
+    %% used for data of this custom storage class.  This information is used when
+    %% creating local variables to point to data from this custom storage class.
+    %case "qualifier"
+
+      %% LibDefaultCustomStorageTypeQualifier is the default qualifier function,
+      %% and may be used when data does not use a type qualifier.
+      %%
+      %% Common type qualifiers include:
+      %%   "const", "volatile" and "const volatile".
+      %return LibDefaultCustomStorageTypeQualifier(record)
+      %%break
+
+    %% ==========================================================================
+    %% Handle unrecognized requests
+    %%
+    %default
+
+      %% You should invoke LibDefaultCustomStorageUnknownClassAccessType
+      %% for unrecognized requests.  It gracefully errors for unhandled
+      %% critical cases, and supplies safe defaults for unhandled
+      %% noncritical requests.
+      %return LibDefaultCustomStorageUnknownDataAccessType ...
+	(record, request, idx, reim)
+      %%break
+
+  %endswitch
+
+%endfunction
+
+
+%% Function: ClassAccess ========================================================
+%% Abstract:
+%%   ClassAccess provides an API for requesting information or actions
+%%   corresponding to a custom storage class.
+%%
+%% Function arguments:
+%%   record
+%%     An entry in the global memory map corresponding to a custom storage
+%%     class.  It contains subrecords corresponding to the data of the
+%%     particular class.  The library function 
+%%     LibCustomStorageClassRecordNumData() returns the number of data subrecords 
+%%     in the class record.  The library function LibGetDataRecord() 
+%%     returns a subrecord corresponding to the i'th data element in the 
+%%     class record.  The TLC library functions may then operate on the 
+%%     data subrecord.
+%%
+%%   request
+%%     the nature of the code or information requested.  ClassAccess must honor
+%%     the following types of requests:  "setup" and "comment"
+%%
+%function ClassAccess(record, request) void
+
+  %% ============================================================================
+  %% Utility functions
+  %% ============================================================================
+  %%
+  %% LibClassAccessInSpecificTLC(toPackage, toTLCName, record, request, idx, reim)
+  %%   Forwards a ClassAccess request to a custom storage class TLC file in
+  %%   another package.  This is useful when you just want to use an existing
+  %%   ClassAccess implementation instead of implement your own action.
+
+  %switch request
+
+    %% ==========================================================================
+    %% The "setup" request performs class-wide operations prior to code
+    %% generation.
+    %%
+    %% The following checks that each data subrecord is a Simulink
+    %% parameter:
+    %%
+    %%
+    %case "setup"
+      %% CFS Start
+          %createrecord ::__cfsTlmMessageTable__ {}  
+      %return
+      %% CFS End
+      %%break
+
+    %% ==========================================================================
+    %% The "comment" request returns text that is inserted along with the type
+    %% definition, data definition or declaration of this class. This "comment"
+    %% request is only used if "typeComment", "declComment", or "defnComment"
+    %% requests are not defined.
+    %%
+    %% Comment delimiters should be part of the string. The string returned
+    %% should not include a terminating newline (although it may include
+    %% intermediate newlines).  A terminating newline will be created
+    %% automatically by Embedded Coder.
+    %% 
+    %% Sample code:
+    %%
+    %%   %return "/* Data with custom storage class CAL\n" + ...
+    %%           " * is used to define calibration data\n" + ...
+    %%           " */"
+    %%   or,
+    %%
+    %%   %openfile textBuf
+    %%   /* Data with custom storage class CAL
+    %%    * is used to define calibration data
+    %%    */
+    %%   %closefile textBuf
+    %%   %return textBuf
+    %%
+    %case "comment"
+
+      %% LibDefaultCustomStorageComment is the default comment function,
+      %% and returns a string identifying the custom storage class.
+      %return LibDefaultCustomStorageComment(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "typeComment" request returns a comment to be inserted before
+    %% the type definition for custom storage class (if it exists).
+    %%
+    %% Sample code:
+    %%
+    %%   %return "/* Type definition for custom storage class %<record.Name> */"
+    %%
+    %case "typeComment"
+
+      %% LibDefaultCustomStorageTypeComment is the default function to
+      %% return the comment string for the type definition (if it exists).
+      %return LibDefaultCustomStorageTypeComment(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "declComment" request returns a comment to be inserted before
+    %% the declaration code for a custom storage class (if it exists).
+    %% 
+    %% Sample code:
+    %%   
+    %%   %return "/* Declaration of data with custom storage class %<record.Name> */"
+    %%
+    %case "declComment"
+
+      %% LibDefaultCustomStorageDeclComment is the default function to
+      %% return the comment string for the data declaration (if it exists).
+      %return LibDefaultCustomStorageDeclComment(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "defnComment" request returns a comment to be inserted before
+    %% the definition code for a custom storage class (if it exists).
+    %%
+    %% Sample code:
+    %%
+    %%   %return "/* Definition of data with custom storage class %<record.Name> */"
+    %%
+    %case "defnComment"
+
+      %% LibDefaultCustomStorageDefnComment is the default function to
+      %% return the comment string for the data definition (if it exists).
+      %return LibDefaultCustomStorageDefnComment(record)
+      %%break
+
+    %% ==========================================================================
+    %% The "groupTypeDeclDefn" request returns the type definitions, data
+    %% declarations and data definitions for a grouped custom storage class.
+    %%
+    %% This request returns a vector of three strings as follows:
+    %% 
+    %%    (1) type definitions for grouped data
+    %%    (2) data declarations for grouped data
+    %%    (3) data definitions for grouped data
+    %%
+    %% NOTE: Ungrouped custom storage classes do not need a
+    %%       groupTypeDeclDefn action.
+    %%
+    %case "groupTypeDeclDefn"
+
+      %return ["", "", ""]
+      %%break
+
+    %% ==========================================================================
+    %% Handle unrecognized requests
+    %%
+    %default
+
+      %% You should invoke LibDefaultCustomStorageUnknownClassAccessType
+      %% for unrecognized requests.  It gracefully errors for unhandled
+      %% critical cases, and supplies safe defaults for unhandled
+      %% noncritical requests.
+      %return LibDefaultCustomStorageUnknownClassAccessType
+	(record, request)
+      %%break
+
+  %endswitch
+
+%endfunction
+
+%% Function: Version ============================================
+%% Abstract:
+%%   The Version function returns the number corresponding to the 
+%%   version used by this custom storage class.  When using this template, 
+%%   return 2.  If this function is not defined, version 1 is assumed.
+%%
+%% Function argurments:
+%%   record
+%%     An entry in the global memory map corresponding to a custom storage
+%%     class. 
+%%
+%function Version(record) void
+  %return 2
+%endfunction
+
+%% [EOF] cfsParmTable.tlc

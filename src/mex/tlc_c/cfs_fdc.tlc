@@ -1,0 +1,59 @@
+%% file : cfs_fdc.tlc
+%% 
+%% Description:
+%%   Simulink Coder TLC Code Generation file for cfs_fdc
+%% 
+
+%implements cfs_fdc "C"
+
+%% Function: BlockTypeSetup ===============================================
+%%           Called once for all block instances
+%function BlockTypeSetup (block, system) void
+    %createrecord ::__cfsFdcTable__ {}  
+    %% The Target Language must be C
+    %% This is locked by cfs_selectcallback.m
+%endfunction
+
+%% Function: BlockInstanceSetup ===========================================
+%%           Called for each block instance
+%function BlockInstanceSetup (block, system) void
+    %<LibBlockSetIsExpressionCompliant(block)>
+    %<LibBlockSetCustomStorageComplianceLevel(block, 2)>
+    %if SLibIsHostBasedSimulationTarget()
+        %return
+    %endif
+    %if LibIsModelReferenceSimTarget() || ...
+        LibIsModelReferenceTarget() || ...
+        LibIsModelReferenceRTWTarget()
+      %assign warnmsg = "Block is being "...
+                       +"used in a Model Reference. This will not result "...
+                       +"in code being generated for CFS FDC Tables"
+      %<LibBlockReportWarning(block,warnmsg)>
+    %endif
+    %assign blkpath   = LibGetBlockPath(block)
+    %assign flag      = LibBlockDWorkAddr(fdcFlag, "", "", 0)
+    %assign id        = LibBlockParameterBaseAddr(fdc_id)
+
+    %% Create Event record for this block
+    %addtorecord __cfsFdcTable__ Fdc {fdcID id; ...
+                               Flag flag; ...
+                               Path blkpath}
+
+%endfunction
+
+%% Function: InitializeConditions =========================================
+%function InitializeConditions (block, system) Output
+    %assign flagDW    = LibBlockDWork(fdcFlag, "", "", 0)
+    %<flagDW> = false;
+%endfunction
+
+
+%% Function: Outputs ======================================================
+%function Outputs (block, system) Output
+    %assign flag      = LibBlockInputSignal(0, "", "", 0)
+    %assign flagDW    = LibBlockDWork(fdcFlag, "", "", 0)
+    %% Copy the FDC flag input to persistent data
+    %<flagDW> = %<flag>;
+%endfunction
+
+%% [EOF]

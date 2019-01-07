@@ -1,0 +1,505 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_has_dwork
+%%  Abstract:  Returns whether Dwork is used by the model (model refs not 
+%%             included).  
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_has_dwork() void  
+  %% NumDWorks might include model reference so only count that used
+  %% as DSTATE
+    %assign needMdlDWork = 0
+    %foreach iw = ::CompiledModel.DWorks.NumDWorks
+      %if (::CompiledModel.DWorks.DWork[iw].UsedAs == "DSTATE")
+        %assign needMdlDWork = 1
+      %endif
+    %endforeach
+  %return needMdlDWork
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_get_parameter_count
+%%  Abstract:  Returns the number of Parameters needed for CFE Parameter      
+%%             table.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_get_parameter_count() void
+    %if EXISTS("__cfsParmTable__")&& ISFIELD(__cfsParmTable__, "Parm") > 0 
+        %return SIZE(__cfsParmTable__.Parm,1)
+    %else 
+        %return 0
+    %endif
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_get_recv_tlm_count
+%%  Abstract:  Returns the number of receiving Message structures.   
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_get_recv_tlm_count() void
+  %assign count = 0
+  %if (EXISTS(__cfsTlmMessageTable__) && ...
+       ISFIELD(__cfsTlmMessageTable__, "Message") > 0)
+    %foreach i = SIZE(__cfsTlmMessageTable__.Message,1)
+      %if __cfsTlmMessageTable__.Message[i].Type == "receive"
+        %assign count = count+1
+      %endif
+    %endforeach
+  %endif
+  %return count
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_get_recv_cmd_count
+%%  Abstract:  Returns the number of receiving Command Message structures. 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_get_recv_cmd_count() void
+  %if (EXISTS(__cfsCmdMessageTable__) && ...
+       ISFIELD(__cfsCmdMessageTable__, "Message") > 0)
+    %return SIZE(__cfsCmdMessageTable__.Message,1)
+  %else
+    %return 0
+  %endif
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_get_send_tlm_count
+%%  Abstract:  Returns the number of sending tlemetry Message structures. 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_get_send_tlm_count() void
+  %assign count = 0
+  %if (EXISTS(__cfsTlmMessageTable__) && ...
+       ISFIELD(__cfsTlmMessageTable__, "Message") > 0)
+    %foreach i = SIZE(__cfsTlmMessageTable__.Message,1)
+      %if __cfsTlmMessageTable__.Message[i].Type == "send"
+        %assign count = count+1
+      %endif
+    %endforeach
+  %endif
+  %return count
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_get_send_cmd_count
+%%  Abstract:  Returns the number of sending Command Message structures. 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_get_send_cmd_count() void
+  %assign count = 0
+  %if (EXISTS(__cfsCmdMessageTable__) && ...
+       ISFIELD(__cfsCmdMessageTable__, "Message") > 0)
+    %foreach i = SIZE(__cfsCmdMessageTable__.Message,1)
+      %if __cfsCmdMessageTable__.Message[i].Type == "send"
+        %assign count = count+1
+      %endif
+    %endforeach
+  %endif
+  %return count
+%endfunction
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_get_conditional_msg_count
+%%  Abstract:  Returns the number of conditional sending Message structures. 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_get_conditional_msg_count() void
+  %if (EXISTS(__cfsConditionalMsgTable__) && ...
+       ISFIELD(__cfsConditionalMsgTable__, "Cmsg") > 0)
+    %return SIZE(__cfsConditionalMsgTable__.Cmsg,1)
+  %else
+    %return 0
+  %endif
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_fdc_messages
+%%  Abstract:  Returns the code buffer for CFE FDC Table
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_fdc_messages() Output
+
+%if EXISTS(__cfsFdcTable__) && ISFIELD(__cfsFdcTable__, "Fdc") > 0
+    /* Begin status flag definition */
+    #define ECI_FLAG_TABLE_DEFINED 1
+    #define ECI_FLAG_MAX_ID        %<SIZE(__cfsFdcTable__.Fdc,1)>
+    
+    /* Create array of FDC structures with id and flag */
+    static const ECI_Flag_t ECI_Flags[]  = {
+    %foreach iLoop = SIZE(__cfsFdcTable__.Fdc,1)
+    /* Event for block: %<__cfsFdcTable__.Fdc[iLoop].Path> */
+    { %<__cfsFdcTable__.Fdc[iLoop].fdcID>, 
+      %<__cfsFdcTable__.Fdc[iLoop].Flag> 
+    },
+    %endforeach
+    {0, 0}
+    };
+    
+    /* End status flag definition */
+%endif
+%endfunction  %% End cfs_fdc_messages()
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_events
+%%  Abstract:  Returns the code buffer for CFE Event Table 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_events() Output
+
+%if EXISTS(__cfsEventTable__) && ISFIELD(__cfsEventTable__, "Event") > 0
+    /* Begin events definition */
+    #define ECI_EVENT_TABLE_DEFINED 1
+    
+    /* Create array of structures with error type, pointer to observable signal location, 
+     the location comment, and the event message */
+     
+    static const ECI_Evs_t ECI_Events[]  = {
+    %foreach iLoop = SIZE(__cfsEventTable__.Event,1)
+    /* Event for block: %<__cfsEventTable__.Event[iLoop].Path> */
+    { %<__cfsEventTable__.Event[iLoop].eventBlockID>, 
+      %<__cfsEventTable__.Event[iLoop].eventID>, 
+      %<__cfsEventTable__.Event[iLoop].eventType>, 
+      %<__cfsEventTable__.Event[iLoop].eventMask>, 
+      %<__cfsEventTable__.Event[iLoop].Flag>, 
+      %<__cfsEventTable__.Event[iLoop].Message>, 
+      "%<__cfsEventTable__.Event[iLoop].Path>", 
+        %if EXISTS(__cfsEventTable__.Event[iLoop].DataAddresses.Data)
+          %assign numData   = SIZE(__cfsEventTable__.Event[iLoop].DataAddresses.Data,1)
+        %else
+          %assign numData = 0
+        %endif
+        %% maxDataIn MUST be the same as max num of Event block data inputs!!!
+        %assign maxDataIn = 5
+        %foreach idx = maxDataIn 
+          %if (idx == maxDataIn-1) && (idx == numData-1)
+            %<__cfsEventTable__.Event[iLoop].DataAddresses.Data[idx].Addr>
+          %elseif idx < numData
+            %<__cfsEventTable__.Event[iLoop].DataAddresses.Data[idx].Addr>,
+          %else
+            %% padding with zeros for unused data inputs in struct
+            %if idx < maxDataIn-1  
+              0,
+            %else
+              0
+            %endif
+          %endif
+        %endforeach
+    },
+    %endforeach
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    };
+    /* End events definition */
+%endif
+
+%endfunction %% end cfs_events()
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_parm_table
+%%  Abstract:  Returns the code buffer for CFE Parameter Table
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_parm_table() Output
+
+
+%if EXISTS(__cfsParmTable__) && ISFIELD(__cfsParmTable__, "Parm") > 0
+    /* Begin parameter table definition */
+
+    %foreach iLoop = SIZE(__cfsParmTable__.Parm,1)
+    %<LibGetRecordCompositeDataTypeName(__cfsParmTable__.Parm[iLoop].Record)>  *%<__cfsParmTable__.Parm[iLoop].Name> ;
+    %endforeach
+
+    %foreach iLoop = SIZE(__cfsParmTable__.Parm,1)
+        %if !ISEMPTY(__cfsParmTable__.Parm[iLoop].ValFunc)
+    int32_T %<__cfsParmTable__.Parm[iLoop].ValFunc>(const %<__cfsParmTable__.Parm[iLoop].Type> *%<__cfsParmTable__.Parm[iLoop].Name>_0);
+        %endif
+    %endforeach
+
+    static ECI_Tbl_t ECI_ParamTable[]  = {
+    %foreach iLoop = SIZE(__cfsParmTable__.Parm,1)
+    { 
+      %<__cfsParmTable__.Parm[iLoop].Address>, 
+      "%<__cfsParmTable__.Parm[iLoop].Name>", 
+      "%<__cfsParmTable__.Parm[iLoop].Desc>", 
+      "%<__cfsParmTable__.Parm[iLoop].FileName>", 
+      %<__cfsParmTable__.Parm[iLoop].Size>, 
+      %if !ISEMPTY(__cfsParmTable__.Parm[iLoop].ValFunc)  
+      &%<__cfsParmTable__.Parm[iLoop].ValFunc>, 
+      %else
+      NULL
+      %endif
+    },
+    %endforeach
+    {0, 0, 0, 0, 0}
+    };
+    
+    /* End parameter table definition */
+
+%endif
+
+%endfunction %% end cfs_parm_table()
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_message_send
+%%  Abstract:  Returns the code buffer for CFE sending Messages      
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_message_send() Output
+
+%assign hasTlmMessages        = (cfs_get_send_tlm_count() > 0) 
+%assign hasCmdMessages        = (cfs_get_send_cmd_count() > 0) 
+%assign hasConditionalMsgs = (cfs_get_conditional_msg_count() > 0)
+
+/* Begin sent messages definition */
+
+/* Place each output signal that is a bus into the Send Table */
+static ECI_Msg_t ECI_MsgSnd[] = {
+%% Get Sent Messages
+%if hasTlmMessages
+  %% loop thru telemetry messages
+  %foreach iLoop = SIZE(__cfsTlmMessageTable__.Message,1)
+    %if __cfsTlmMessageTable__.Message[iLoop].Type == "send" 
+      %assign address      = __cfsTlmMessageTable__.Message[iLoop].Address 
+      %assign msgName      = __cfsTlmMessageTable__.Message[iLoop].Name 
+      %assign busType      = __cfsTlmMessageTable__.Message[iLoop].BusName 
+      %assign flag         = "NULL"
+      %assign busTypeUpper = FEVAL("upper",busType)
+      %assign msgNameUpper = FEVAL("upper",msgName)
+      %% to set flag field, look to see if there is a Conditional Msg
+      %% record for this Telemetry CSC instance
+      %if hasConditionalMsgs
+        %foreach cndIdx = SIZE(__cfsConditionalMsgTable__.Cmsg,1)
+          %assign cndMsgAddr = __cfsConditionalMsgTable__.Cmsg[cndIdx].SignalID 
+          %if cndMsgAddr == address
+            %assign flag = __cfsConditionalMsgTable__.Cmsg[cndIdx].Flag
+          %endif
+        %endforeach
+      %endif
+      { %<busTypeUpper>_%<msgNameUpper>_MID, %<address>, sizeof(%<busType>), NULL, %<flag> },
+    %endif
+  %endforeach
+%endif
+%if hasCmdMessages
+  %% loop thru command messages
+  %foreach iLoop = SIZE(__cfsCmdMessageTable__.Message,1)
+    %if __cfsCmdMessageTable__.Message[iLoop].Type == "send" 
+      %assign address      = __cfsCmdMessageTable__.Message[iLoop].Address 
+      %assign msgName      = __cfsCmdMessageTable__.Message[iLoop].Name 
+      %assign busType      = __cfsCmdMessageTable__.Message[iLoop].BusName 
+      %assign flag         = "NULL"
+      %assign busTypeUpper = FEVAL("upper",busType)
+      %assign msgNameUpper = FEVAL("upper",msgName)
+      %% to set flag field, look to see if there is a Conditional Msg
+      %% record for this Telemetry CSC instance
+      %if hasConditionalMsgs
+        %foreach cndIdx = SIZE(__cfsConditionalMsgTable__.Cmsg,1)
+          %assign cndMsgAddr = __cfsConditionalMsgTable__.Cmsg[cndIdx].SignalID 
+          %if cndMsgAddr == address
+            %assign flag = __cfsConditionalMsgTable__.Cmsg[cndIdx].Flag
+          %endif
+        %endforeach
+      %endif
+      { %<busTypeUpper>_%<msgNameUpper>_MID, %<address>, sizeof(%<busType>), NULL, %<flag>},
+    %endif
+  %endforeach
+%endif
+
+%% Get Conditionally sent Messages
+%%if hasConditionalMsgs
+%if 0
+  %foreach iLoop = SIZE(__cfsConditionalMsgTable__.Cmsg,1)
+    %assign address      = __cfsConditionalMsgTable__.Cmsg[iLoop].SignalID 
+    %assign msgName      = __cfsConditionalMsgTable__.Cmsg[iLoop].MsgName 
+    %assign busType      = __cfsConditionalMsgTable__.Cmsg[iLoop].BusType 
+    %assign flag         = __cfsConditionalMsgTable__.Cmsg[iLoop].Flag 
+    %assign busTypeUpper = FEVAL("upper",busType)
+    %assign msgNameUpper = FEVAL("upper",msgName)
+    { %<busTypeUpper>_%<msgNameUpper>_MID, %<address>, sizeof(%<busType>), NULL, %<flag>},
+    %%
+    %% for output messages, need to define a macro to defines the size of each msg.
+    %%
+  %endforeach
+%endif
+
+{0,NULL,0,NULL,NULL}
+};
+
+/* End sent messages definition */
+%endfunction %% end cfs_message_send() 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_message_receive
+%%  Abstract:  Returns the code buffer for CFE receiving Messages (includes
+%%             Command Messages.        
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_message_receive() Output
+
+%assign hasMessages        = (cfs_get_recv_tlm_count() > 0)
+%assign hasCommands        = (cfs_get_recv_cmd_count() > 0)
+
+  /* Begin received messages definition */
+%if hasCommands
+  /* Specify Queue sizes for Command Messages */
+  %foreach iLoop = SIZE(__cfsCmdMessageTable__.Message,1)
+    %if __cfsCmdMessageTable__.Message[iLoop].Type == "receive"
+      %assign address      = __cfsCmdMessageTable__.Message[iLoop].Address 
+      %assign msgName      = __cfsCmdMessageTable__.Message[iLoop].Name 
+      %assign busType      = __cfsCmdMessageTable__.Message[iLoop].BusName 
+      %assign flag         = "NULL"
+      %assign busTypeUpper = FEVAL("upper",busType)
+      %assign msgNameUpper = FEVAL("upper",msgName)
+      static %<busType> %<msgName>_queue[ECI_CMD_MSG_QUEUE_SIZE]; 
+    %endif
+  %endforeach
+%endif
+
+/* Place each input signal that is a bus into the Receive Table */
+static ECI_Msg_t ECI_MsgRcv[] = {
+  %% if Command Messages exist, emit
+  %if hasCommands
+  %foreach iLoop = SIZE(__cfsCmdMessageTable__.Message,1)
+    %if __cfsCmdMessageTable__.Message[iLoop].Type == "receive"
+      %assign address      = __cfsCmdMessageTable__.Message[iLoop].Address 
+      %assign msgName      = __cfsCmdMessageTable__.Message[iLoop].Name 
+      %assign busType      = __cfsCmdMessageTable__.Message[iLoop].BusName 
+      %assign busTypeUpper = FEVAL("upper",busType)
+      %assign msgNameUpper = FEVAL("upper",msgName)
+      { %<busTypeUpper>_%<msgNameUpper>_MID, %<address>, sizeof(%<busType>), &%<msgName>_queue[0], NULL},
+    %endif
+  %endforeach
+  %endif
+
+  %% if Received Messages exist, emit
+  %if hasMessages
+  %foreach iLoop = SIZE(__cfsTlmMessageTable__.Message,1)
+    %if __cfsTlmMessageTable__.Message[iLoop].Type == "receive"
+      %assign address      = __cfsTlmMessageTable__.Message[iLoop].Address 
+      %assign msgName      = __cfsTlmMessageTable__.Message[iLoop].Name 
+      %assign busType      = __cfsTlmMessageTable__.Message[iLoop].BusName 
+      %assign busTypeUpper = FEVAL("upper",busType)
+      %assign msgNameUpper = FEVAL("upper",msgName)
+      { %<busTypeUpper>_%<msgNameUpper>_MID, %<address>, sizeof(%<busType>), NULL, NULL},  
+    %endif
+  %endforeach
+  %endif
+{0,NULL,0,NULL,NULL}
+};
+
+/* End received messages definition */
+%endfunction %% end cfs_message_receive()
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_gnc_time    
+%%  Abstract:  Returns the code buffer for define indicating GNC Time use.      
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_gnc_time() Output
+
+%% __cslGncTimeIsUsed is set if a GNC time block is used in the model
+%if EXISTS("::__cslGncTimeIsUsed__") == 1
+    /* GNC time is used in model code */
+    #define ECI_STEP_TIMESTAMP_DEFINED
+%endif
+
+%endfunction  %% End cfs_gnc_time()
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_write_model_data    
+%%  Abstract:  Returns the code buffer for define the model data (BlockIO,      
+%%             DWork, etc. 
+%%             Note: 
+%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_write_model_data() Output
+  %openfile tbuf
+    %<LibWriteModelData()>
+  %closefile tbuf
+  %assign rbuf = FEVAL("cfs_rtmodel_rep",tbuf,::tSimStruct)
+  %<rbuf>
+%endfunction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_pack_model_data    
+%%  Abstract:       
+%%      Call FcnPackModelDataIntoRTM() in ertlib.tlc.  The documentation 
+%%      for this function is found in ertlib.tlc in the comment header.   
+%%      This function will produce the code buffer to initialize the model
+%%      data in preparation to a call to the model_initialize() function. 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_pack_model_data() Output
+  %<FcnPackModelDataIntoRTM()>
+%endfunction
+
+%% DocFunction{Other Useful Functions}: cfs_PackModelDataIntoRTM =============
+%% Abstract:
+%%      Copied from FcnPackModelDataIntoRTM() in ertlib.tlc and formatted buffer 
+%%      such that lines of code for initialization are suitable for use as a 
+%%      #define (lines are terminated with "\" to spen mutiple lines and not
+%%      choke the CPP.
+%% Args:
+%%   None
+%function cfs_FcnPackModelDataIntoRTM() void
+  %openfile tbuf
+  #define ECI_INIT_FCN \\
+
+  %if !(MultiInstanceERTCode && !UsingMalloc && !GenerateClassInterface) ... 
+    || SLibUseBackwardCompatibleReusableInterface()
+    %<LibCallModelInitialize()>
+    %closefile tbuf
+    %return tbuf
+  %endif
+  %assign rootSystem = System[NumSystems-1]
+  %assign reqInsts = LibGetSystemField(rootSystem, "ReqRootPrmHdrDataInsts")
+  %if !reqInsts.ParamsInst && ...
+    !SLibPrmBufferIsEmpty("SimulinkGlobal", "Instance") && ...
+    !GenerateClassInterface
+    %if (FEVAL("verLessThan", "matlab","8.3") )
+        %<SLibGetRaramPointerFromRTM(0)> = &%<LibGetParametersStruct()>; \\
+
+    %else
+        %<SLibGetParamPointerFromRTM(0)> = &%<LibGetParametersStruct()>; \\
+
+    %endif
+  %endif
+  %if !reqInsts.BlockIOInst && !LibBlockIOInstanceIsEmpty() && ...
+    !GenerateClassInterface
+    %<SLibGetBlockIOPointerFromRTM(0)> = &%<LibGetBlockIOStruct()>; \\
+
+  %endif
+  %if !reqInsts.DworkInst && !LibDWorkInstanceIsEmpty() && !GenerateClassInterface
+    %<SLibGetDWorkPointerFromRTM(0)> = &%<LibGetDWorkStruct()>; \\
+
+  %endif
+  %if !reqInsts.ContStatesInst && !LibContStatesInstanceIsEmpty() && ...
+    !GenerateClassInterface
+    %<SLibGetContStatesPointerFromRTM(0)> = &%<LibGetContinuousStateStruct()>; \\
+
+  %endif
+  %if !reqInsts.PrevZCStatesInst && !LibPrevZCStatesInstanceIsEmpty() && ...
+    !GenerateClassInterface
+    %<SLibGetPreviousZCStructFromRTM(0)> = &%<LibGetPreviousZCStruct()>; \\
+
+  %endif
+  %if CompiledModel.RootIOFormat == "Part of model data structure" 
+    %if !reqInsts.ExtInpsInst && !LibExternalInputsInstanceIsEmpty() &&...
+      !GenerateClassInterface
+       %<RTMGet("U")> = &%<LibGetExternalInputStruct()>; \\
+
+    %endif
+    %if !reqInsts.ExtOutputsInst && !LibExternalOutputsInstanceIsEmpty() && ...
+      !GenerateClassInterface
+      %<RTMGet("Y")> = &%<LibGetExternalOutputStruct()>; \\
+
+    %endif
+  %endif
+  %<LibCallModelInitialize()>
+  %closefile tbuf
+  %return tbuf
+  
+%endfunction  
+
+%% EOF
+
