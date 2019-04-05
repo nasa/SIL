@@ -11,10 +11,14 @@ stages:
   - build
 
 before_install:
-# needed for compiling 32bit software on 64bit machine
+  # needed for compiling 32bit software on 64bit machine
   - sudo apt-get install gcc-multilib
-# needed for running CFS and automatically exiting
+  # needed for running CFS and automatically exiting
   - sudo apt-get install timelimit
+
+before_script:
+  # increase mqueue limit (see issue 12 of CFE repo)
+  - sudo sh -c "echo 256 > /proc/sys/fs/mqueue/msg_max"
   
 jobs:
   include:

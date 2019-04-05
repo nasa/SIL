@@ -73,7 +73,7 @@ make
 cd exe
 
 # run CFS for 5 sec to view initialization
-timelimit -t 5 -T 5 -s 2 sudo ./core-linux.bin
+timelimit -t 5 -T 5 -s 2 ./core-linux.bin
 
 # return to root
 cd $cwd
