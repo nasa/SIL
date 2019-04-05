@@ -8,7 +8,7 @@ fi
 
 ## move to test directory
 cwd=$(pwd)
-cd test/eci
+cd tests/eci
 
 ## get ECI from repo
 # Note: getting testing branch for now, eventually get master when its moved
