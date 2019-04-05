@@ -157,7 +157,7 @@
     static const ECI_Evs_t ECI_Events[]  = {
     %foreach iLoop = SIZE(__cfsEventTable__.Event,1)
     /* Event for block: %<__cfsEventTable__.Event[iLoop].Path> */
-    { %<__cfsEventTable__.Event[iLoop].eventBlockID>, 
+    { %<__cfsEventTable__.Event[iLoop].eventBlockNumData>, 
       %<__cfsEventTable__.Event[iLoop].eventID>, 
       %<__cfsEventTable__.Event[iLoop].eventType>, 
       %<__cfsEventTable__.Event[iLoop].eventMask>, 
@@ -205,12 +205,12 @@
     /* Begin parameter table definition */
 
     %foreach iLoop = SIZE(__cfsParmTable__.Parm,1)
-    %<LibGetRecordCompositeDataTypeName(__cfsParmTable__.Parm[iLoop].Record)>  *%<__cfsParmTable__.Parm[iLoop].Name> ;
+    %<__cfsParmTable__.Parm[iLoop].Type>  *%<__cfsParmTable__.Parm[iLoop].VarName>;
     %endforeach
 
     %foreach iLoop = SIZE(__cfsParmTable__.Parm,1)
         %if !ISEMPTY(__cfsParmTable__.Parm[iLoop].ValFunc)
-    int32_T %<__cfsParmTable__.Parm[iLoop].ValFunc>(const %<__cfsParmTable__.Parm[iLoop].Type> *%<__cfsParmTable__.Parm[iLoop].Name>_0);
+    int32_T %<__cfsParmTable__.Parm[iLoop].ValFunc>(const %<__cfsParmTable__.Parm[iLoop].Type> *%<__cfsParmTable__.Parm[iLoop].VarName>_0);
         %endif
     %endforeach
 
@@ -218,15 +218,15 @@
     %foreach iLoop = SIZE(__cfsParmTable__.Parm,1)
     { 
       %<__cfsParmTable__.Parm[iLoop].Address>, 
-      "%<__cfsParmTable__.Parm[iLoop].Name>", 
+      "%<__cfsParmTable__.Parm[iLoop].VarName>", %% Note: this must only be the table name (not the app name as well)
       "%<__cfsParmTable__.Parm[iLoop].Desc>", 
-      "%<__cfsParmTable__.Parm[iLoop].FileName>", 
+      "%<__cfsParmTable__.Parm[iLoop].CfsTblFileName>", 
       %<__cfsParmTable__.Parm[iLoop].Size>, 
-      %if !ISEMPTY(__cfsParmTable__.Parm[iLoop].ValFunc)  
+    %if !ISEMPTY(__cfsParmTable__.Parm[iLoop].ValFunc)  
       &%<__cfsParmTable__.Parm[iLoop].ValFunc>, 
-      %else
+    %else
       NULL
-      %endif
+    %endif
     },
     %endforeach
     {0, 0, 0, 0, 0}
@@ -397,7 +397,7 @@ static ECI_Msg_t ECI_MsgRcv[] = {
 %function cfs_gnc_time() Output
 
 %% __cslGncTimeIsUsed is set if a GNC time block is used in the model
-%if EXISTS("::__cslGncTimeIsUsed__") == 1
+%if EXISTS("::__cfsGncTimeIsUsed__") == 1
     /* GNC time is used in model code */
     #define ECI_STEP_TIMESTAMP_DEFINED
 %endif
