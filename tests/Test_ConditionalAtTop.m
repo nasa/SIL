@@ -17,6 +17,7 @@ classdef Test_ConditionalAtTop < cfetargettester.CfeTargetTester
     methods(TestClassSetup)
         function loadModel(testcase)
                 load_system(testcase.TestModel);
+                testcase.configModelForTesting(testcase.TestModel);                  
                 testcase.addTeardown(@() close_system(testcase.TestModel, 0));
         end
     end
@@ -28,9 +29,8 @@ classdef Test_ConditionalAtTop < cfetargettester.CfeTargetTester
             import matlab.unittest.constraints.IssuesNoWarnings          
             testcase.verifyThat(@() testcase.normalModeSim(testcase.TestModel), IssuesNoWarnings);  
             testcase.verifyThat(@() testcase.acceleratorModeSim(testcase.TestModel), IssuesNoWarnings); 
-            testcase.verifyThat(@() testcase.rapidAccelModeSim(testcase.TestModel), IssuesNoWarnings);       
-            % SIL mode is not supposed to work in this case
-            % TODO testcase.verifyThat(@() testcase.silModeSim(testcase.TestModel), IssuesNoWarnings);                              
+            testcase.verifyThat(@() testcase.rapidAccelModeSim(testcase.TestModel), IssuesNoWarnings);   
+            testcase.verifyThat(@() testcase.silModeSim(testcase.TestModel), IssuesNoWarnings);            
         end
         
         % Check basic contents of SIL interface header 

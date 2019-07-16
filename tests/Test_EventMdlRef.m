@@ -23,6 +23,8 @@ classdef Test_EventMdlRef < cfetargettester.CfeTargetTester
         function loadModel(testcase)
                 load_system(testcase.TestModel);
                 load_system(testcase.TestModelRef);
+                testcase.configModelForTesting(testcase.TestModel); 
+                testcase.configModelForTesting(testcase.TestModelRef);                  
                 testcase.addTeardown(@() close_system(testcase.TestModel, 0));
                 testcase.addTeardown(@() close_system(testcase.TestModelRef, 0));               
         end

@@ -18,6 +18,7 @@ classdef Test_CmdTlmMessageMultiple < cfetargettester.CfeTargetTester
     methods(TestClassSetup)
         function loadModel(testcase)
                 load_system(testcase.TestModel);
+                testcase.configModelForTesting(testcase.TestModel);                  
                 testcase.addTeardown(@() close_system(testcase.TestModel, 0));
         end
     end
@@ -31,12 +32,8 @@ classdef Test_CmdTlmMessageMultiple < cfetargettester.CfeTargetTester
             
             testcase.verifyThat(@() testcase.normalModeSim(testcase.TestModel), IssuesNoWarnings);                
             testcase.verifyThat(@() testcase.acceleratorModeSim(testcase.TestModel), IssuesNoWarnings);
-            testcase.verifyThat(@() testcase.rapidAccelModeSim(testcase.TestModel), IssuesNoWarnings);       
-
-            % verify the SIL sim fails normally due to CSC use at root
-            % level IO
-            testcase.verifyThat(@() testcase.silModeSim(testcase.TestModel), ...
-                Throws('Connectivity:target:CodeInfoInportUnsupportedImplementation'));      
+            testcase.verifyThat(@() testcase.rapidAccelModeSim(testcase.TestModel), IssuesNoWarnings);   
+            testcase.verifyThat(@() testcase.silModeSim(testcase.TestModel), IssuesNoWarnings);    
         end
         
         % Check basic contents of SIL interface header 
