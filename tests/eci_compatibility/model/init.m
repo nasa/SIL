@@ -1,3 +1,4 @@
+% Populates the base workspace with definitions needed by SILTest.slx.
 
 %% Setup parameter tables
 

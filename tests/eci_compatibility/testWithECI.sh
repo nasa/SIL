@@ -13,7 +13,7 @@ cd tests/eci
 ## get ECI from repo
 # Note: getting testing branch for now, eventually get master when its moved
 rm -rf ./ECI
-git clone --single-branch --branch testing https://github.com/nasa/ECI ./ECI 
+git clone --single-branch --branch master https://github.com/nasa/ECI ./ECI 
 
 ## get CFE (using ECI CI script)
 . ./ECI/ci/fetchCFE.sh
