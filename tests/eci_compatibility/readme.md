@@ -19,13 +19,15 @@ In order to demonstrate compatibility with the ECI, code is generated from a sam
 
 ## Running the test
 
-1. Open Matlab and run the following:
+1. Open Matlab, navigate to the root of the SIL repo, and then run the following:
 ```
-cd <SIL_repo_root>\tests\eci\models
+cd tests\eci_compatibility\model
 genCode
 ```
 1. Commit the modified generateCode.zip and push to github.
 1. Monitor the results of the Travis pipeline to verify code is compatible with ECI
+
+Note, the verification tests can be run locally, but require the ability to compile the ECI in a CFS environment, and thus must be run on Linux. To do so, please refer to the steps in `.travis.yml` in the root of the repo.
 
 ### Limitations
 

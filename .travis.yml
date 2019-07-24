@@ -24,7 +24,7 @@ jobs:
   include:
     - stage: build
       name: "ECICompatibilityTest"
-      script: . ./tests/eci/testWithECI.sh
+      script: . ./tests/eci_compatibility/testWithECI.sh
     
 notifications:
   email:

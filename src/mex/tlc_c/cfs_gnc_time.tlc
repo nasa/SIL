@@ -85,7 +85,7 @@
         %else
             %% otherwise this is target code, so
             %% access uint time fields from GNC time struct
-            %return "((real_T)ECI_TimeStamp.Seconds + ((real_T)ECI_TimeStamp.Subseconds/4294967296.0))"
+            %return "((real_T)ECI_Step_TimeStamp.Seconds + ((real_T)ECI_Step_TimeStamp.Subseconds/4294967296.0))"
         %endif
       %else
         %assign errTxt = "Block output port index not supported: %<portIdx>"
