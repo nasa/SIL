@@ -17,7 +17,7 @@ Usage of the SIL requires the following Matlab Toolboxes:
 
 Please see the Simulink integration guide (located in the [doc](doc/) directory) for specific instructions on generating and integrating SIL-compatible code.
 
-# Testing
+# Testing [![build passing](https://travis-ci.com/nasa/SIL.svg?branch=master)](https://travis-ci.com/nasa/SIL/)
 
 The SIL has been used with 2017b and 2018b and is currently tested with 2018b on Windows and Ubuntu. There are no known incompatibilities with supported versions or platforms, but they are not actively tested. 
 
