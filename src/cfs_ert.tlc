@@ -62,6 +62,22 @@
   rtwoptions(idx).tooltip        = ...
     ['Build identifier to be included with the code.'];
 
+  idx = idx + 1;
+  rtwoptions(idx).prompt         = 'Message ID Header:';
+  rtwoptions(idx).type           = 'Edit';
+  rtwoptions(idx).default        = 'msgids.h';
+  rtwoptions(idx).tlcvariable    = '__ECI_MSG_HEADER_FILENAME__';
+  rtwoptions(idx).tooltip        = ...
+    ['Message header containing definitions of MID macros to be included in eci_interface.h.'];
+
+  idx = idx + 1;
+  rtwoptions(idx).prompt         = 'Performance ID Header:';
+  rtwoptions(idx).type           = 'Edit';
+  rtwoptions(idx).default        = 'perfids.h';
+  rtwoptions(idx).tlcvariable    = '__ECI_PERF_HEADER_FILENAME__';
+  rtwoptions(idx).tooltip        = ...
+    ['Message header containing definitions of PID macros to be included in eci_interface.h.'];
+
   rtwgensettings.BuildDirSuffix = '_cfs_ert_rtw';
   rtwgensettings.Version        = '1';
   

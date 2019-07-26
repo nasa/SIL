@@ -67,9 +67,15 @@
   %openfile tmpFcnBuf
   #include "%<LibGetMdlPubHdrBaseName()>.h" /* Model's header file */
   #include "%<LibGetMdlPrvHdrBaseName()>.h"
-  
-  /* Code Revision Identifier */
-  #define ECI_APP_REVISION_NUMBER "%<__CFS_BUILD_VERSION_IDENTIFIER__>"
+
+
+  %if !ISEMPTY(__ECI_MSG_HEADER_FILENAME__)
+  #include "%<__ECI_MSG_HEADER_FILENAME__>" /* FSW-provided header file */
+  %endif
+  %if !ISEMPTY(__ECI_PERF_HEADER_FILENAME__)
+  #include "%<__ECI_PERF_HEADER_FILENAME__>" /* FSW-provided header file */
+  %endif
+ 
   %closefile tmpFcnBuf
   %<LibSetSourceFileSection(::interfaceHFile, "Includes", tmpFcnBuf)>
 
@@ -107,6 +113,9 @@
       ECI_TBL_FILEDEF(ECI_TBL_FileDef_State, %<dworkStruct>, %<model_name_short>.STATE, %<model_name_upper> STATES, %<model_name>_state.tbl)
       #define ECI_STATE_TBL %<dworkStruct>   
   %endif
+
+/* Code Revision Identifier */
+#define ECI_APP_REVISION_NUMBER "%<__CFS_BUILD_VERSION_IDENTIFIER__>"
 
 #define MODEL_NAME_LEN  (%<model_name_len>)
 #if MODEL_NAME_LEN > OS_MAX_API_NAME

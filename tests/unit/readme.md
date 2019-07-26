@@ -8,13 +8,19 @@ This test framework utilizes the Matlab unit test framework to implement a serie
 
 Generally, each test utilizes a corresponding Simulink model (which is specified as a parameter of the test class) which exercises a feature of the SIL and for which code will be generated and validated. 
 
-Some tests leverage stubbed C source and header files  (to allow compilation) and auxilary matlab data definitions and scripts/functions where needed.
+Some tests leverage stubbed C source and header files (to allow compilation) and auxiliary matlab data definitions and scripts/functions where needed.
 
 Generally, each test consists of two phases... 
 
-First the corresponding model is run in various simulation modes to verify that the SIL feature is compatible with typical Simulink usage scenarios. These are validated qualitatively... a successful simulation run with no warnings or errors is generally considered passing... the numerical output of the models is not asseses. 
+First the corresponding model is run in various simulation modes to verify that the SIL feature is compatible with typical Simulink usage scenarios. These are validated qualitatively... a successful simulation run with no warnings or errors is generally considered passing... the numerical output of the models is not assessed. 
 
 Secondly, code is generated for the model and then validated. Generally validations focus on the contents of the eci_interface header that the SIL generates and ensuring that it contains the correct contents (via regex and string matching) and is compilable. Ocassionally tests may validate certain parts of the standard generated code where appropriate. 
+
+## Running the tests
+
+1. Ensure that the SIL's [`src`](../../src) directory is on your matlab path, so that the tests have access to the code.
+1. Ensure that SIL sfunctions have been compiled. The utility function [`compileSilSfcn()`](../../src/util/compileSilSfcn.m) has been provided to do this.
+1. Within this directory, run the command `runtests`
 
 ## Status
 

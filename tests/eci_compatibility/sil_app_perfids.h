@@ -1,0 +1,7 @@
+
+#ifndef SIL_APP_PERFIDS
+#define SIL_APP_PERFIDS
+
+#define SILTEST_PERF_ID  0x52
+
+#endif /* SIL_APP_PERFIDS */

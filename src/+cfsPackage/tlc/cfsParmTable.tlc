@@ -113,23 +113,25 @@
 
       %assign appname       = LibGetModelName()
       %assign parmname      = LibGetRecordIdentifier(record)
+      %assign tblname       = appname + "." + parmname
       %assign parmnameUpper = FEVAL("upper",parmname)
       %assign parmnameLen   = SIZE(parmname,1)+1
       %assign descrip       = "%<appname> app\'s %<parmname> table"
-      %assign filename      = "%<LibGetRecordIdentifier(record)>.tbl"
+      %assign tblFilename   = parmname + ".tbl"
       %assign typename      = "%<LibGetRecordCompositeDataTypeName(record)>"
-      %assign size          = "sizeof(%<LibGetRecordCompositeDataTypeName(record)>)"
-      %% FIXME: Testing
-      %%assign size          = "sizeof(%<LibGetRecordIdentifier(record)>)"
+      %assign size          = "sizeof(" + typename + ")"
       %assign defFile       = LibGetCustomStorageAttributes(record).DefinitionFile
+
+      %% Check if user has defined validation function for this table 
       %if !ISEMPTY(LibGetCustomStorageAttributes(record).ValidationFcn)
         %assign valFcn        = LibGetCustomStorageAttributes(record).ValidationFcn
       %else
         %assign valFcn        = ""
       %endif
 
-      %% If this storage class has an empty definiton file attribute, 
-      %% use the paramter table name as the .tbl file (e.g. <model>.tbl
+      %% If this storage class has definiton file attribute, make the name 
+      %% of the table match it. Otherwise use the paramter table name as 
+      %% the .tbl file (e.g. <model>.tbl)
       %if !ISEMPTY(defFile)
         %assign prefix = FEVAL("strsplit",defFile,".")
         %if !ISEMPTY(prefix[0])
@@ -162,12 +164,11 @@
       %openfile tbuf
 
       %if ::CompiledModel.ConfigSet.ERTFilePackagingFormat == "Modular"
-        %%assign modelTypesHeader = ::CompiledModel.Name+"_types.h"
         %assign modelTypesHeader = LibGetMdlPubHdrBaseName()+"_types.h"
         #include "%<modelTypesHeader>"
       %endif
 
-      %% Specify the included headers only if this is definiton file for this
+      %% Specify the included headers only if this is definition file for this
       %% parameter is defined (not model.c) and it hasn't been encounterd 
       %% yet.
       %if !isDefined && !ISEMPTY(tblBaseFileName) 
@@ -184,11 +185,11 @@
       /*
       ** The macro below identifies:
       **    1) the data structure type to use as the table image format
-      **    2) the name of the table to be placed into the CFS Table File Header
+      **    2) the full name of the table to be placed into the CFS Table File Header (ie, appName.tableName)
       **    3) a brief description of the contents of the file image
       **    4) the desired name of the table image binary file that is CFS compatible
       */
-      ECI_TBL_FILEDEF(CFE_TBL_FileDef, %<parmname>, %<appname>.%<parmname>, %<appname> %<parmname>, %<tblBaseFileName>.tbl )
+      ECI_TBL_FILEDEF(CFE_TBL_FileDef, %<parmname>, %<tblname>, %<appname> %<parmname>, %<tblFilename> )
 
       %closefile tbuf
  
@@ -199,15 +200,15 @@
       %% Create Parameter record for this block
       %% Note: DefFile only used in this TLC
       %% Note: No formal API to get address of imported pointer, so make the reference here
-      %addtorecord __cfsParmTable__ Parm {Address      "&(%<parmname>)"; ...  
-                                          Record       record; ...
-                                          Name         parmname; ...
-                                          Desc         descrip; ...
-                                          FileName     filename; ...
-                                          Size         size; ...
-                                          ValFunc      valFcn; ...
-                                          Type         typename; ...
-                                          DefFile      tblBaseFileName ...
+      %addtorecord __cfsParmTable__ Parm {Address           "&(%<parmname>)"; ...  
+                                          VarName           parmname;...
+                                          CFSTblName        tblname; ...
+                                          Desc              descrip; ...
+                                          CfsTblFileName    tblFilename; ...
+                                          Size              size; ...
+                                          ValFunc           valFcn; ...
+                                          Type              typename; ...
+                                          DefFile           tblBaseFileName ...
                                           }
 
       %openfile declBuf

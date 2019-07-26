@@ -1,0 +1,34 @@
+dist: trusty
+language: c
+compiler: gcc
+
+# build all branches
+branches:
+  only:
+  - /.*/
+
+stages:
+  - build
+
+before_install:
+  # needed for compiling 32bit software on 64bit machine
+  - sudo apt-get install gcc-multilib
+  # needed for running CFS and automatically exiting
+  - sudo apt-get install timelimit
+
+before_script:
+  # increase mqueue limit (see issue 12 of CFE repo)
+  - sudo sh -c "echo 256 > /proc/sys/fs/mqueue/msg_max"
+  
+jobs:
+  include:
+    - stage: build
+      name: "ECICompatibilityTest"
+      script: . ./tests/eci_compatibility/testWithECI.sh
+    
+notifications:
+  email:
+    recipients:
+      - steven.lentine@nasa.gov
+    on_success: change
+    on_failure: always

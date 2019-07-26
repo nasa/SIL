@@ -30,15 +30,15 @@
                        +"in code being generated for CFS Event Tables"
       %<LibBlockReportWarning(block,warnmsg)>
     %endif
-    %assign blkpath   = LibGetFormattedBlockPath(block)
-    %assign flag      = LibBlockDWorkAddr(eventFlag, "", "", 0)
-    %assign id        = LibBlockParameterBaseAddr(event_id)
-    %assign type      = LibBlockParameterBaseAddr(event_type)
-    %assign mask      = LibBlockParameterBaseAddr(event_mask)
-    %assign numdata   = LibBlockParameterValue(event_numdata, 0)
-    %assign fmtstring = LibBlockParameterBaseAddr(event_fmtstring)
-    %assign blkidnum  = CAST("Number",numdata)
-    %assign blkid     = "EVENT_message%<blkidnum>_ID"
+    %assign blkpath         = LibGetFormattedBlockPath(block)
+    %assign flag            = LibBlockDWorkAddr(eventFlag, "", "", 0)
+    %assign id              = LibBlockParameterBaseAddr(event_id)
+    %assign type            = LibBlockParameterBaseAddr(event_type)
+    %assign mask            = LibBlockParameterBaseAddr(event_mask)
+    %assign numdata         = LibBlockParameterValue(event_numdata, 0)
+    %assign fmtstring       = LibBlockParameterBaseAddr(event_fmtstring)
+    %assign blknumdata      = CAST("Number",numdata)
+    %assign blknumdatamacro = "ECI_EVENT_%<blknumdata>_DATA"
 
     %% Store sub-record of addresses of data inputs 
     %createrecord tDataAddresses {}
@@ -48,7 +48,7 @@
     %endforeach
 
     %% Create Event record for this block
-    %addtorecord __cfsEventTable__ Event { eventBlockID blkid; ...
+    %addtorecord __cfsEventTable__ Event { eventBlockNumData blknumdatamacro; ...
                                     eventID id; ...
                                     eventType type; ...
                                     eventMask mask; ...
