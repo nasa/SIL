@@ -72,6 +72,11 @@ classdef CfeTargetTester < matlab.unittest.TestCase
     end
     
     methods
+        % Set config items for model during testing
+        function configModelForTesting(testcase, model) %#ok<INUSL>
+            set_param(model, 'GenerateReport', 'off'); % dont generate report
+        end
+        
         % Normal mode sim
         function normalModeSim(testcase, model) %#ok<INUSL>
             set_param(model, 'SimulationMode', 'normal');

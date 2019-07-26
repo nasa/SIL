@@ -1,6 +1,6 @@
 function defs = csc_registration(action)
 
-%   Copyright 1994-2018 The MathWorks, Inc.
+%   Copyright 1994-2019 The MathWorks, Inc.
 %   $Revision: $  $Date: $
 
 
@@ -13,8 +13,8 @@ function defs = csc_registration(action)
 % - Hand modification of this file is not recommended as it may prevent the
 %   Simulink custom storage class designer from loading the associated classes.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% - Generated on:   17-Oct-2018 17:29:33
-% - MATLAB version: 9.5.0.944444 (R2018b)
+% - Generated on:   01-Jul-2019 14:46:55
+% - MATLAB version: 9.5.0.1067069 (R2018b) Update 4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -53,8 +53,8 @@ switch action
     set(h, 'TypeComment', '');
     set(h, 'DeclareComment', '');
     set(h, 'DefineComment', '');
-    set(h, 'CSCTypeAttributesClassName', '');
-    set(h, 'CSCTypeAttributes', []);
+    set(h, 'CSCTypeAttributesClassName', 'cfsPackage.customMsgAttribs');
+        set(h.CSCTypeAttributes, 'SupportSILPIL', true);
     set(h, 'TLCFileName', 'cfsTlmMessage.tlc');
     defs = [defs; h];
 
@@ -88,8 +88,8 @@ switch action
     set(h, 'TypeComment', '');
     set(h, 'DeclareComment', '');
     set(h, 'DefineComment', '');
-    set(h, 'CSCTypeAttributesClassName', '');
-    set(h, 'CSCTypeAttributes', []);
+    set(h, 'CSCTypeAttributesClassName', 'cfsPackage.customMsgAttribs');
+        set(h.CSCTypeAttributes, 'SupportSILPIL', true);
     set(h, 'TLCFileName', 'cfsCmdMessage.tlc');
     defs = [defs; h];
 
