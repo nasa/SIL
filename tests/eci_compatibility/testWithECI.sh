@@ -19,7 +19,9 @@ git clone --single-branch --branch master https://github.com/nasa/ECI ./ECI
 . ./ECI/ci/fetchCFE.sh
 
 ## integrate generated code
-silTestDir=./cFE/apps/siltest
+cfsDir=./cfs
+appsDir=$cfsDir/apps
+silTestDir=$appsDir/siltest
 
 # copy generated source code
 mkdir -p $silTestDir/fsw/src
@@ -43,11 +45,11 @@ mkdir -p $silTestDir/fsw/mission_inc
 cp ./sil_app_perfids.h $silTestDir/fsw/mission_inc/sil_app_perfids.h
 
 # copy ECI source code to CFS apps dir 
-mkdir -p ./cFE/apps/eci/fsw
-cp -r ./ECI/fsw/* ./cFE/apps/eci/fsw/
+mkdir -p $appsDir/eci/fsw
+cp -r ./ECI/fsw/* $appsDir/eci/fsw/
 
 # integrate new app with cfs
-cd ./cFE
+cd $cfsDir
 # make any code changes needed to integrate this app
 # ensure CFS builds new app we added
 sed -i '44a THE_APPS += siltest' ./build/cpu1/Makefile
