@@ -170,7 +170,7 @@ out = struct(...
 
 end
 
-function str = create_correct_filepath(filepath)
+function str = create_correct_filepath(filepath) %#ok<DEFNU>
     filePortions = strsplit(filepath, '/');
     str = strjoin(filePortions, filesep);
 end

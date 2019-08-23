@@ -105,7 +105,7 @@ classdef CfeTargetTester < matlab.unittest.TestCase
                       
         % Readability checks for class model. This method assumes that
         % code has already been generated
-        function checkInterfaceCodeContents(testcase, model, patterns)
+        function checkInterfaceCodeContents(testcase, ~, patterns)
             workingDir = fullfile(testcase.tempWorkingDir.fullpath, ...
                 'slprj');
             testcase.checkCodeContents(workingDir, patterns);

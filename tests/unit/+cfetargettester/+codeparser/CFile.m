@@ -53,7 +53,7 @@ classdef (SupportExtensionMethods=true) CFile < cfetargettester.codeparser.CCode
             % Check if the file has any functions
             if ~isempty(p.Results.Functions)
                 fcnNames = {p.Results.Functions.Name};
-                fcnCell = mat2cell(p.Results.Functions, 1, ones(1, size(p.Results.Functions, 2)));
+                fcnCell = mat2cell(p.Results.Functions, 1, ones(1, size(p.Results.Functions, 2))); %#ok<MMTC>
                 
                 % Create a Map
                 obj.FunctionList = containers.Map(fcnNames, fcnCell);
