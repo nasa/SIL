@@ -153,44 +153,51 @@
     %%
     %case "define"
       %% CFS Start
-      %assign busname = LibGetRecordCompositeDataTypeName(record)
-      %% TODO: check if this is a bus ?
-      %assign addr         = LibDefaultCustomStorageAddress(record, idx, reim)
-      %assign msgname      = LibGetRecordIdentifier(record)
-
-      %% Determine whether this is a sent or received CFS Message
-      %if LibCustomStorageRecordIsExternalInput(record)
-           %assign type = "receive"
-      %elseif LibCustomStorageRecordIsExternalOutput(record) || ...
-              (ISFIELD(record,"IsAtRootInputOrOutput") && record.IsAtRootInputOrOutput == TLC_TRUE) 
-              %% (ISFIELD(record,"DrivesRootOutport") && record.DrivesRootOutport == "yes") || ...
-           %assign type = "send"
+      %if LibIsAccessingCustomDataForSILPIL(record) == TLC_TRUE
+          %% If the access is for SILPIL, then we dont want to add to the
+          %% __cfsTlmMessageTable__, just return the default
+          %return LibDefaultCustomStorageDefine(record) 
       %else
-        %assign errmsg = "The custom Storage class \"%<LibGetCustomStorageClassName(record)>\" "...
-                        +"is used to define CFS Message structures.  This "... 
-                        +"storage class for \"%<LibGetRecordIdentifier(record)>\"  "...
-                        +"must be used for an external input or to drive "...
-                        +"an external output."
-        %<LibReportError(errmsg)>
+          %assign busname = LibGetRecordCompositeDataTypeName(record)
+          %% TODO: check if this is a bus ?
+          %assign addr         = LibDefaultCustomStorageAddress(record, idx, reim)
+          %assign msgname      = LibGetRecordIdentifier(record)
+
+          %% Determine whether this is a sent or received CFS Message
+          %if LibCustomStorageRecordIsExternalInput(record)
+              %assign type = "receive"
+          %elseif ( LibCustomStorageRecordIsExternalOutput(record) || ...
+                    (ISFIELD(record,"IsAtRootInputOrOutput") && record.IsAtRootInputOrOutput == TLC_TRUE) && ... 
+                    (ISFIELD(record,"DrivesRootOutport") && record.DrivesRootOutport == "yes")  ) 
+              %assign type = "send"
+          %else
+              %assign errmsg = "The custom Storage class \"%<LibGetCustomStorageClassName(record)>\" "...
+                            +"is used to define CFS Message structures.  This "... 
+                            +"storage class for \"%<LibGetRecordIdentifier(record)>\"  "...
+                            +"must be used for an external input or to drive "...
+                            +"an external output."
+              %<LibReportError(errmsg)>
+          %endif
+      
+
+          %% LibDefaultCustomStorageDefine is the default define function to define
+          %% a global variable whose identifier is the name of the data.  If the
+          %% data is a parameter, the definition is also statically initialized to
+          %% its nominal value (as set in MATLAB).
+          %%
+          %% tbuf will contain the code definition chunk for a signal object
+          %% that is a CFS Message (by applying the cfsTlmMessage storage class).
+          %openfile tbuf
+          %<LibDefaultCustomStorageDefine(record)>     
+          %closefile tbuf
+
+          %addtorecord __cfsTlmMessageTable__ Message {Address      addr; ...
+                                              Name         msgname; ...
+                                              BusName      busname; ...
+                                              Type         type ...
+                                              }
+          %return tbuf
       %endif
-
-      %% LibDefaultCustomStorageDefine is the default define function to define
-      %% a global variable whose identifier is the name of the data.  If the
-      %% data is a parameter, the definition is also statically initialized to
-      %% its nominal value (as set in MATLAB).
-      %%
-      %% tbuf will contain the code definition chunk for a signal object
-      %% that is a CFS Message (by applying the cfsTlmMessage storage class).
-      %openfile tbuf
-      %<LibDefaultCustomStorageDefine(record)>     
-      %closefile tbuf
-
-       %addtorecord __cfsTlmMessageTable__ Message {Address      addr; ...
-                                            Name         msgname; ...
-                                            BusName      busname; ...
-                                            Type         type ...
-                                            }
-      %return tbuf
       %% CFS End
       %%break
 
