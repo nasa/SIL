@@ -55,7 +55,7 @@ cd $cfsDir
 sed -i '44a THE_APPS += siltest' ./build/cpu1/Makefile
 sed -i '50a THE_TBLS += siltest' ./build/cpu1/Makefile
 # configure the app to run when CFS starts
-sed -i '5a CFE_APP, /cf/siltest.so,          siltest_AppMain,     SILTest,       90,   8192, 0x0, 0;' ./build/cpu1/exe/cfe_es_startup.scr
+sed -i '5a CFE_APP, /cf/apps/siltest.so,          siltest_AppMain,     SILTest,       90,   8192, 0x0, 0;' ./build/cpu1/exe/cfe_es_startup.scr
 sed -i '26a #include "sil_app_msgids.h"' ./apps/sch_lab/fsw/platform_inc/sch_lab_sched_tab.h
 sed -i '74a      { SILTEST_TICK_MID,   1, 0 },' ./apps/sch_lab/fsw/platform_inc/sch_lab_sched_tab.h
 # update makefile to include math library
@@ -74,11 +74,13 @@ make
 
 cd exe
 
+outfile=output.log
+
 # run CFS for 5 sec to view initialization
-timelimit -t 5 -T 5 -s 2 ./core-linux.bin | tee output.file
+timelimit -t 5 -T 5 -s 2 ./core-linux.bin | tee $outfile
 
 echo "Looking for failures to start..."
-if ! grep 'Could not load' -i output.file; then
+if grep 'Could not load' -i $outfile; then
     echo "Found a failure to start in the log"
     # exit with error if CI
     if [[ "$CI" == true ]]; then 
@@ -89,7 +91,7 @@ else
 fi
 
 echo "Looking for errors in log..."
-if ! grep 'Error' -i output.file; then
+if grep 'Error' -i $outfile; then
     echo "Found an error in the log"
     # exit with error if CI
     if [[ "$CI" == true ]]; then 
