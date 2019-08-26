@@ -55,7 +55,7 @@ cd $cfsDir
 sed -i '44a THE_APPS += siltest' ./build/cpu1/Makefile
 sed -i '50a THE_TBLS += siltest' ./build/cpu1/Makefile
 # configure the app to run when CFS starts
-sed -i '5a CFE_APP, /cf/apps/siltest.so,          siltest_AppMain,     SILTest,       90,   8192, 0x0, 0;' ./build/cpu1/exe/cfe_es_startup.scr
+sed -i '5a CFE_APP, /cf/siltest.so,          siltest_AppMain,     SILTest,       90,   8192, 0x0, 0;' ./build/cpu1/exe/cfe_es_startup.scr
 sed -i '26a #include "sil_app_msgids.h"' ./apps/sch_lab/fsw/platform_inc/sch_lab_sched_tab.h
 sed -i '74a      { SILTEST_TICK_MID,   1, 0 },' ./apps/sch_lab/fsw/platform_inc/sch_lab_sched_tab.h
 # update makefile to include math library
