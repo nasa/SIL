@@ -78,8 +78,20 @@ cd exe
 timelimit -t 5 -T 5 -s 2 ./core-linux.bin | tee output.file
 
 echo "Looking for failures:"
-! grep 'Could not load' -i output.file
-! grep 'Error' -i output.file
+if ! grep 'Could not load' -i output.file; then
+    echo "Found a failure to start in the log"
+    # exit with error if CI
+    if [[ "$CI" == true ]]; then 
+        exit 1
+    fi
+fi
+if ! grep 'Error' -i output.file; then
+    echo "Found an error in the log"
+    # exit with error if CI
+    if [[ "$CI" == true ]]; then 
+        exit 1
+    fi
+fi
 
 # return to root
 cd $cwd
