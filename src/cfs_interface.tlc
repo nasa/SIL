@@ -149,6 +149,9 @@
 %% Insert CSL GNC code chunk
 %<cfs_gnc_time()>
 
+%% Insert Critical Data Store (CDS) Table 
+%<cfs_cds_table()>
+
 /* model initialization function */
 %%<cfs_pack_model_data()>
 %assign init_code = cfs_FcnPackModelDataIntoRTM()

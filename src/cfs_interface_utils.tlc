@@ -193,6 +193,34 @@
 %endif
 
 %endfunction %% end cfs_events()
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  cfs_cds_table
+%%  Abstract:  Returns the code buffer for CDS Table 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%function cfs_cds_table() Output
+
+%if EXISTS(__cfsCDSTable__) && ISFIELD(__cfsCDSTable__, "CDSElem") > 0
+    /* Begin CDS definition */
+    #define ECI_CDS_TABLE_DEFINED 1
+    
+    /* Create array of structures with data to be managed by CDS */ 
+    
+    static const ECI_Cds_t ECI_CdsTable[]  = {
+    %foreach iLoop = SIZE(__cfsCDSTable__.CDSElem,1)
+    { "%<__cfsCDSTable__.CDSElem[iLoop].Name>", 
+      %<__cfsCDSTable__.CDSElem[iLoop].Size>, 
+      %<__cfsCDSTable__.CDSElem[iLoop].Address>, 
+    },
+    %endforeach
+    {NULL, 0, NULL}
+    };
+    /* End CDS definition */
+%endif
+
+%endfunction %% end cfs_cds_table()
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  cfs_parm_table
 %%  Abstract:  Returns the code buffer for CFE Parameter Table

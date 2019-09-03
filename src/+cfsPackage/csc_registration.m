@@ -13,7 +13,7 @@ function defs = csc_registration(action)
 % - Hand modification of this file is not recommended as it may prevent the
 %   Simulink custom storage class designer from loading the associated classes.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% - Generated on:   01-Jul-2019 14:46:55
+% - Generated on:   01-Sep-2019 13:57:38
 % - MATLAB version: 9.5.0.1067069 (R2018b) Update 4
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -56,6 +56,41 @@ switch action
     set(h, 'CSCTypeAttributesClassName', 'cfsPackage.customMsgAttribs');
         set(h.CSCTypeAttributes, 'SupportSILPIL', true);
     set(h, 'TLCFileName', 'cfsTlmMessage.tlc');
+    defs = [defs; h];
+
+    h = Simulink.CSCDefn;
+    set(h, 'Name', 'cfsCriticalDataStorage');
+    set(h, 'OwnerPackage', 'cfsPackage');
+    set(h, 'CSCType', 'Other');
+    set(h, 'MemorySection', 'Default');
+    set(h, 'IsMemorySectionInstanceSpecific', false);
+    set(h, 'IsGrouped', false);
+        set(h.DataUsage, 'IsParameter', false);
+        set(h.DataUsage, 'IsSignal', true);
+    set(h, 'DataScope', 'Auto');
+    set(h, 'IsDataScopeInstanceSpecific', true);
+    set(h, 'IsAutosarPerInstanceMemory', false);
+    set(h, 'DataInit', 'Auto');
+    set(h, 'IsDataInitInstanceSpecific', false);
+    set(h, 'DataAccess', 'Direct');
+    set(h, 'IsDataAccessInstanceSpecific', false);
+    set(h, 'HeaderFile', '');
+    set(h, 'IsHeaderFileInstanceSpecific', true);
+    set(h, 'DefinitionFile', '');
+    set(h, 'IsDefinitionFileInstanceSpecific', true);
+    set(h, 'Owner', '');
+    set(h, 'IsOwnerInstanceSpecific', true);
+    set(h, 'PreserveDimensions', false);
+    set(h, 'PreserveDimensionsInstanceSpecific', false);
+    set(h, 'IsReusable', false);
+    set(h, 'IsReusableInstanceSpecific', false);
+    set(h, 'CommentSource', 'Default');
+    set(h, 'TypeComment', '');
+    set(h, 'DeclareComment', '');
+    set(h, 'DefineComment', '');
+    set(h, 'CSCTypeAttributesClassName', 'cfsPackage.customMsgAttribs');
+        set(h.CSCTypeAttributes, 'SupportSILPIL', true);
+    set(h, 'TLCFileName', 'cfsCriticalDataStorage.tlc');
     defs = [defs; h];
 
     h = Simulink.CSCDefn;
