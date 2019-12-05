@@ -11,6 +11,10 @@ function pkt = setupCFSPkt(type)
 %   myPktObj = setupCFSPkt(pktType)
 %   	pktType may be either 'Cmd' or 'Tlm'
 %
+% Note that the signal object generated here (either 'Cmd' or 'Tlm') be
+% used with a bus with the proper header specified for the packet to be
+% properly handled.
+%
     
     pkt = cfsPackage.Signal();
     pkt.CoderInfo.StorageClass = 'Custom';
