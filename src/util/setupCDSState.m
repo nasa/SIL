@@ -1,4 +1,4 @@
-function pkt = setupCDSState()
+function state = setupCDSState()
 % setupCDSState() Returns a Signal object which defines a CDS state 
 %
 % The returned signal object must reside somewhere that the model has
@@ -10,8 +10,9 @@ function pkt = setupCDSState()
 %   mySignalObj = setupCDSState()
 %
     
-    pkt = cfsPackage.Signal();
-    pkt.CoderInfo.StorageClass = 'Custom';
-    pkt.CoderInfo.CustomStorageClass = 'cfsCriticalDataStorage';
+    state = cfsPackage.Signal();
+    state.CoderInfo.StorageClass = 'Custom';
+    state.CoderInfo.CustomStorageClass = 'cfsCriticalDataStorage';
+    state.CoderInfo.CustomAttributes.DataScope = 'Exported';
     
 end % setupCDSState()
