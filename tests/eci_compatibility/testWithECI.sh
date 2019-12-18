@@ -90,6 +90,9 @@ else
     echo "No failures found"
 fi
 
+# this is a jenky way to try to find anything that might indicate a problem
+# since there's not a common error format to look for
+
 echo "Looking for errors in log..."
 if grep 'Error' -i $outfile; then
     echo "Found an error in the log"
@@ -99,6 +102,17 @@ if grep 'Error' -i $outfile; then
     fi
 else
     echo "No errors found"
+fi
+
+echo "Looking for Failures in log..."
+if grep 'Failure' -i $outfile; then
+    echo "Found a failure in the log"
+    # exit with error if CI
+    if [[ "$CI" == true ]]; then 
+        exit 1
+    fi
+else
+    echo "No failures found"
 fi
 
 # return to root
