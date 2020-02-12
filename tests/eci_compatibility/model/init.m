@@ -81,7 +81,9 @@ TblVals.Param1 = 1;
 TblVals.Param2 = uint8([0; 1]);
 TblVals.Param3 = single(10);
 
-Tbl = createCfsTbl(TblVals, 'Tbl');
+Tbl = createCfsTbl(TblVals, 'Tbl', 'ValidateTbl');
+% Note: Table validation function name must be the name of the block which
+% implements it in the model, NOT the name of the matlab function.
 
 cellInfo = { 
     { ... 
