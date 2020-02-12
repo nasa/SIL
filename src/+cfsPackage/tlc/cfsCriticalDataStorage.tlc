@@ -1,6 +1,6 @@
 %% File Abstract ================================================================
 %%
-%% This is the TLC implementation of cfsCmdMessage Custom Storage Class.  It
+%% This is the TLC implementation of cfsTlmMessage Custom Storage Class.  It
 %% is dervied from the published template found in TEMPLATE_v2.tlc stored
 %% at <matlabroot>/toolbox/rtw/targets/ecoder/csc_templates
 %% 
@@ -155,29 +155,33 @@
       %% CFS Start
       %if LibIsAccessingCustomDataForSILPIL(record) == TLC_TRUE
           %% If the access is for SILPIL, then we dont want to add to the
-          %% __cfsCmdMessageTable__, just return the default
+          %% __cfsCDSTable__, just return the default
           %return LibDefaultCustomStorageDefine(record) 
       %else
-          %assign busname = LibGetRecordCompositeDataTypeName(record)
+%%LibCustomStorageRecordIsBlockState(record)
+          %%assign busname = LibGetRecordCompositeDataTypeName(record)
           %% TODO: check if this is a bus ?
-          %assign addr         = LibDefaultCustomStorageAddress(record, idx, reim)
-          %assign msgname      = LibGetRecordIdentifier(record)
+          %assign addr      = LibDefaultCustomStorageAddress(record, idx, reim)
+          %assign cdsname   = LibGetRecordIdentifier(record)
+          %assign size      = LibGetDataTypeSLSizeFromId(LibGetRecordDataTypeId(record)) * ...
+                                LibGetDataWidth(record)
 
-          %% Determine whether this is a received CFS Command Message
-          %if LibCustomStorageRecordIsExternalInput(record)
-              %assign type = "receive"
-          %elseif ( LibCustomStorageRecordIsExternalOutput(record) || ...
-                    (ISFIELD(record,"IsAtRootInputOrOutput") && record.IsAtRootInputOrOutput == TLC_TRUE) && ... 
-                    (ISFIELD(record,"DrivesRootOutport") && record.DrivesRootOutport == "yes")  ) 
-              %assign type = "send"
-          %else
-              %assign errmsg = "The custom Storage class \"%<LibGetCustomStorageClassName(record)>\" "...
-                            +"is used to define CFS Message structures.  This "... 
-                            +"storage class for \"%<LibGetRecordIdentifier(record)>\"  "...
-                            +"must be used for an external input or to drive "...
-                            +"an external output."
-              %<LibReportError(errmsg)>
-          %endif
+%%          %% Determine whether this is a sent or received CFS Message
+%%          %if LibCustomStorageRecordIsExternalInput(record)
+%%              %assign type = "receive"
+%%          %elseif ( LibCustomStorageRecordIsExternalOutput(record) || ...
+%%                    (ISFIELD(record,"IsAtRootInputOrOutput") && record.IsAtRootInputOrOutput == TLC_TRUE) && ... 
+%%                    (ISFIELD(record,"DrivesRootOutport") && record.DrivesRootOutport == "yes")  ) 
+%%              %assign type = "send"
+%%          %else
+%%              %assign errmsg = "The custom Storage class \"%<LibGetCustomStorageClassName(record)>\" "...
+%%                            +"is used to define CFS Message structures.  This "... 
+%%                            +"storage class for \"%<LibGetRecordIdentifier(record)>\"  "...
+%%                            +"must be used for an external input or to drive "...
+%%                            +"an external output."
+%%              %<LibReportError(errmsg)>
+%%          %endif
+      
 
           %% LibDefaultCustomStorageDefine is the default define function to define
           %% a global variable whose identifier is the name of the data.  If the
@@ -185,18 +189,26 @@
           %% its nominal value (as set in MATLAB).
           %%
           %% tbuf will contain the code definition chunk for a signal object
-          %% that is a CFS Command Message (by applying the cfsMessage storage class).
+          %% that is a CFS Message (by applying the cfsTlmMessage storage class).
           %openfile tbuf
           %<LibDefaultCustomStorageDefine(record)>     
           %closefile tbuf
 
-          %% Create Command Message record for this block
-          %addtorecord __cfsCmdMessageTable__ Message {Address      addr; ...
-                                              Name         msgname; ...
-                                              BusName      busname; ...
-                                              Type         type ...
-                                              }
-      
+          %addtorecord __cfsCDSTable__ CDSElem {Name      cdsname; ...
+                                                Size      size; ...
+                                                Address   addr ...
+                                               }
+
+
+%%    %addtorecord __cfsEventTable__ Event { eventBlockNumData blknumdatamacro; ...
+%%                                    eventID id; ...
+ %%                                   eventType type; ...
+%%                                    eventMask mask; ...
+%%                                    DataAddresses %<tDataAddresses>; ...
+%%                                    Flag flag; ...
+%%                                    Message fmtstring; ...
+%%                                    Path blkpath}
+
           %return tbuf
       %endif
       %% CFS End
@@ -402,7 +414,7 @@
     %%
     %case "setup"
       %% CFS Start
-          %createrecord ::__cfsCmdMessageTable__ {}  
+          %createrecord ::__cfsCDSTable__ {}  
       %return
       %% CFS End
       %%break

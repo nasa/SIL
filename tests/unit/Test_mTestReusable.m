@@ -14,6 +14,7 @@ classdef Test_mTestReusable < cfetargettester.CfeTargetTester
     methods(TestClassSetup)
         function loadModel(testcase)
                 load_system(testcase.TestModel);
+                testcase.configModelForTesting(testcase.TestModel);                
                 testcase.addTeardown(@() close_system(testcase.TestModel, 0));
         end
     end

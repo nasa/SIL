@@ -19,7 +19,9 @@ git clone --single-branch --branch master https://github.com/nasa/ECI ./ECI
 . ./ECI/ci/fetchCFE.sh
 
 ## integrate generated code
-silTestDir=./cFE/apps/siltest
+cfsDir=./cfs
+appsDir=$cfsDir/apps
+silTestDir=$appsDir/siltest
 
 # copy generated source code
 mkdir -p $silTestDir/fsw/src
@@ -43,17 +45,17 @@ mkdir -p $silTestDir/fsw/mission_inc
 cp ./sil_app_perfids.h $silTestDir/fsw/mission_inc/sil_app_perfids.h
 
 # copy ECI source code to CFS apps dir 
-mkdir -p ./cFE/apps/eci/fsw
-cp -r ./ECI/fsw/* ./cFE/apps/eci/fsw/
+mkdir -p $appsDir/eci/fsw
+cp -r ./ECI/fsw/* $appsDir/eci/fsw/
 
 # integrate new app with cfs
-cd ./cFE
+cd $cfsDir
 # make any code changes needed to integrate this app
 # ensure CFS builds new app we added
 sed -i '44a THE_APPS += siltest' ./build/cpu1/Makefile
 sed -i '50a THE_TBLS += siltest' ./build/cpu1/Makefile
 # configure the app to run when CFS starts
-sed -i '5a CFE_APP, /cf/apps/siltest.so,          siltest_AppMain,     SILTest,       90,   8192, 0x0, 0;' ./build/cpu1/exe/cfe_es_startup.scr
+sed -i '5a CFE_APP, /cf/siltest.so,          siltest_AppMain,     SILTest,       90,   8192, 0x0, 0;' ./build/cpu1/exe/cfe_es_startup.scr
 sed -i '26a #include "sil_app_msgids.h"' ./apps/sch_lab/fsw/platform_inc/sch_lab_sched_tab.h
 sed -i '74a      { SILTEST_TICK_MID,   1, 0 },' ./apps/sch_lab/fsw/platform_inc/sch_lab_sched_tab.h
 # update makefile to include math library
@@ -72,8 +74,46 @@ make
 
 cd exe
 
+outfile=output.log
+
 # run CFS for 5 sec to view initialization
-timelimit -t 5 -T 5 -s 2 ./core-linux.bin
+timelimit -t 5 -T 5 -s 2 ./core-linux.bin | tee $outfile
+
+echo "Looking for failures to start..."
+if grep 'Could not load' -i $outfile; then
+    echo "Found a failure to start in the log"
+    # exit with error if CI
+    if [[ "$CI" == true ]]; then 
+        exit 1
+    fi
+else
+    echo "No failures found"
+fi
+
+# this is a jenky way to try to find anything that might indicate a problem
+# since there's not a common error format to look for
+
+echo "Looking for errors in log..."
+if grep 'Error' -i $outfile; then
+    echo "Found an error in the log"
+    # exit with error if CI
+    if [[ "$CI" == true ]]; then 
+        exit 1
+    fi
+else
+    echo "No errors found"
+fi
+
+echo "Looking for Failures in log..."
+if grep 'Failure' -i $outfile; then
+    echo "Found a failure in the log"
+    # exit with error if CI
+    if [[ "$CI" == true ]]; then 
+        exit 1
+    fi
+else
+    echo "No failures found"
+fi
 
 # return to root
 cd $cwd
