@@ -22,6 +22,7 @@
   %endif
 
   %openfile tempExternBuf
+  #include "eci_app.h"
     extern ECI_TimeStamp_t ECI_Step_TimeStamp;
   %closefile tempExternBuf  
  
@@ -31,6 +32,9 @@
   %%
   %<LibCacheExtern(tempExternBuf)>
   %%
+  %assign mdlPrivHdrFileName = SLibGetFileNameForCode("mdl_priv_hdr") + ".h"
+  %<LibAddToCommonIncludes(mdlPrivHdrFileName)>
+  
   %% The csl_app.h will contain the GNC Time struct typedef so
   %% include in the model.h
   %% Note: cfs_interface template will also place it in model.h
